@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+coverage
+.next
+.nuxt
+.vuepress/dist
+.serverless
+.fusebox
+.dynamodb
+.tern-port
+*.log
+.DS_Store
+.env*
+.vscode
+.idea
