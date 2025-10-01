@@ -1,0 +1,4 @@
+# Minimal requirements for migration generation
+sqlmodel
+alembic
+psycopg2-binary

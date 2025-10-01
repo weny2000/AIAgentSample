@@ -1,0 +1,30 @@
+# AI Knowledge Platform - Unified Backend Service
+# Combined dependencies from gateway and organization services
+
+# Core FastAPI and web framework dependencies  
+fastapi==0.117.1
+uvicorn[standard]==0.37.0
+pydantic==2.11.9
+pydantic-settings==2.11.0
+
+# Database and ORM
+sqlmodel==0.0.14
+psycopg2-binary==2.9.9
+alembic==1.13.1
+asyncpg==0.29.0
+
+# Authentication and security
+python-jose[cryptography]==3.5.0
+PyJWT==2.8.0
+bcrypt==4.0.1
+passlib==1.7.4
+python-multipart==0.0.20
+
+# HTTP client for future service integration
+httpx==0.28.1
+
+# Configuration and environment
+python-dotenv==1.1.1
+
+# Logging and monitoring
+loguru==0.7.3

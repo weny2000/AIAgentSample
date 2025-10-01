@@ -1,0 +1,49 @@
+services:
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:17
+    container_name: ai-knowledge-db
+    environment:
+      POSTGRES_DB: ai_knowledge_dev
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password_123
+    ports:
+      - "6432:5432"
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev_user -d ai_knowledge_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend-service:
+    build: ./backend-service
+    container_name: ai-knowledge-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - JWT_SECRET=dev_secret_123_change_in_production
+      - LOG_LEVEL=DEBUG
+      - ENVIRONMENT=development
+      # Database connection components
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=ai_knowledge_dev
+      - DB_USER=dev_user
+      - DB_PASSWORD=dev_password_123
+      - DB_ECHO_SQL=true
+    volumes:
+      - ./backend-service/migrations:/app/migrations
+    networks:
+      - app-network
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  app-network:
+    driver: bridge
