@@ -11,11 +11,13 @@ This directory contains the Infrastructure as Code (IaC) for the AI Agent System
 ## Getting Started
 
 1. Install dependencies:
+
    ```bash
    npm install
    ```
 
 2. Bootstrap CDK (first time only):
+
    ```bash
    cdk bootstrap
    ```
@@ -39,6 +41,7 @@ This directory contains the Infrastructure as Code (IaC) for the AI Agent System
 ## Architecture
 
 The infrastructure will include:
+
 - VPC with private subnets
 - Lambda functions for API operations
 - DynamoDB tables for metadata storage
@@ -48,4 +51,4 @@ The infrastructure will include:
 - IAM roles and policies
 - KMS keys for encryption
 
-*Note: Infrastructure components will be implemented in subsequent tasks.*
+_Note: Infrastructure components will be implemented in subsequent tasks._

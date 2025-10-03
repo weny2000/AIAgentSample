@@ -1,0 +1,217 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  AWS_REGION: 'us-east-1'
+  ENVIRONMENT: 'production'
+
+jobs:
+  security-compliance-check:
+    name: Security and Compliance Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run comprehensive security scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'json'
+          output: 'security-report.json'
+
+      - name: Check security scan results
+        run: |
+          if [ $(jq '.Results | length' security-report.json) -gt 0 ]; then
+            echo "Security vulnerabilities found. Blocking production deployment."
+            jq '.Results' security-report.json
+            exit 1
+          fi
+
+      - name: Validate compliance requirements
+        run: |
+          echo "Running compliance validation..."
+          # Add specific compliance checks here
+          npm run compliance:check
+
+  deploy-infrastructure:
+    name: Deploy Infrastructure to Production
+    runs-on: ubuntu-latest
+    needs: security-compliance-check
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd infrastructure && npm ci
+
+      - name: CDK Diff
+        run: cd infrastructure && npx cdk diff --context environment=${{ env.ENVIRONMENT }}
+
+      - name: CDK Deploy with approval
+        run: cd infrastructure && npx cdk deploy --all --require-approval never --context environment=${{ env.ENVIRONMENT }}
+
+      - name: Verify infrastructure deployment
+        run: |
+          cd infrastructure
+          npx cdk list --context environment=${{ env.ENVIRONMENT }}
+          # Add infrastructure health checks
+
+  deploy-backend:
+    name: Deploy Backend to Production
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        include:
+          - deployment-type: blue-green
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd backend && npm ci
+
+      - name: Build backend
+        run: cd backend && npm run build
+
+      - name: Deploy Lambda functions (Blue-Green)
+        run: cd backend && npm run deploy:production:blue-green
+
+      - name: Run database migrations
+        run: cd backend && npm run migrate:production
+
+      - name: Health check
+        run: |
+          sleep 30
+          npm run health-check:production
+
+      - name: Switch traffic to new version
+        run: cd backend && npm run switch-traffic:production
+
+  deploy-frontend:
+    name: Deploy Frontend to Production
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    environment: production
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN_PRODUCTION }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Install dependencies
+        run: |
+          npm ci
+          cd frontend && npm ci
+
+      - name: Build frontend
+        run: cd frontend && npm run build:production
+        env:
+          VITE_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          VITE_COGNITO_USER_POOL_ID: ${{ secrets.PRODUCTION_COGNITO_USER_POOL_ID }}
+          VITE_COGNITO_CLIENT_ID: ${{ secrets.PRODUCTION_COGNITO_CLIENT_ID }}
+
+      - name: Deploy to S3 with backup
+        run: |
+          # Create backup of current version
+          aws s3 sync s3://${{ secrets.PRODUCTION_S3_BUCKET }}/ s3://${{ secrets.PRODUCTION_S3_BACKUP_BUCKET }}/$(date +%Y%m%d-%H%M%S)/
+          
+          # Deploy new version
+          aws s3 sync frontend/dist/ s3://${{ secrets.PRODUCTION_S3_BUCKET }}/ --delete
+          
+          # Invalidate CloudFront cache
+          aws cloudfront create-invalidation --distribution-id ${{ secrets.PRODUCTION_CLOUDFRONT_ID }} --paths "/*"
+
+  post-deployment-tests:
+    name: Post-Deployment Tests
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run comprehensive tests
+        run: |
+          npm run test:e2e:production
+          npm run test:performance:production
+          npm run test:security:production
+        env:
+          PRODUCTION_API_URL: ${{ secrets.PRODUCTION_API_URL }}
+          PRODUCTION_FRONTEND_URL: ${{ secrets.PRODUCTION_FRONTEND_URL }}
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "Production deployment successful!"
+          # Add Slack/Teams notification here
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Deployment tests failed. Initiating rollback..."
+          npm run rollback:production

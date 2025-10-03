@@ -5,20 +5,19 @@ import { AiAgentStack } from './stacks/ai-agent-stack';
 
 const app = new cdk.App();
 
-// Development environment
-new AiAgentStack(app, 'AiAgentDev', {
+// Get stage from context or default to 'dev'
+const stage = app.node.tryGetContext('stage') || 'dev';
+
+new AiAgentStack(app, `AiAgentStack-${stage}`, {
+  stage,
   env: {
     account: process.env.CDK_DEFAULT_ACCOUNT,
     region: process.env.CDK_DEFAULT_REGION,
   },
-  stage: 'dev',
+  description: `AI Agent System infrastructure for ${stage} environment`,
+  tags: {
+    Project: 'AiAgentSystem',
+    Stage: stage,
+    ManagedBy: 'CDK',
+  },
 });
-
-// Production environment (commented out for now)
-// new AiAgentStack(app, 'AiAgentProd', {
-//   env: {
-//     account: process.env.CDK_DEFAULT_ACCOUNT,
-//     region: process.env.CDK_DEFAULT_REGION,
-//   },
-//   stage: 'prod',
-// });

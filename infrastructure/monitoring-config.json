@@ -1,0 +1,378 @@
+{
+  "monitoring": {
+    "dashboards": {
+      "ai-agent-system": {
+        "widgets": [
+          {
+            "type": "metric",
+            "properties": {
+              "metrics": [
+                ["AiAgent/Lambda", "Invocations", "FunctionName", "ai-agent-artifact-check"],
+                [".", "Errors", ".", "."],
+                [".", "Duration", ".", "."]
+              ],
+              "period": 300,
+              "stat": "Sum",
+              "region": "us-east-1",
+              "title": "Artifact Check Handler Metrics"
+            }
+          },
+          {
+            "type": "metric",
+            "properties": {
+              "metrics": [
+                ["AiAgent/Business", "ArtifactChecksStarted"],
+                [".", "ArtifactChecksCompleted"],
+                [".", "ArtifactChecksFailed"]
+              ],
+              "period": 300,
+              "stat": "Sum",
+              "region": "us-east-1",
+              "title": "Business Metrics - Artifact Checks"
+            }
+          }
+        ]
+      }
+    },
+    "alarms": {
+      "high-error-rate": {
+        "metricName": "Errors",
+        "namespace": "AWS/Lambda",
+        "dimensions": {
+          "FunctionName": "ai-agent-artifact-check"
+        },
+        "threshold": 5,
+        "comparisonOperator": "GreaterThanOrEqualToThreshold",
+        "evaluationPeriods": 2,
+        "period": 300,
+        "statistic": "Sum",
+        "treatMissingData": "notBreaching"
+      },
+      "high-duration": {
+        "metricName": "Duration",
+        "namespace": "AWS/Lambda",
+        "dimensions": {
+          "FunctionName": "ai-agent-artifact-check"
+        },
+        "threshold": 25000,
+        "comparisonOperator": "GreaterThanThreshold",
+        "evaluationPeriods": 3,
+        "period": 300,
+        "statistic": "Average",
+        "treatMissingData": "notBreaching"
+      },
+      "critical-issues-spike": {
+        "metricName": "CriticalIssuesFound",
+        "namespace": "AiAgent/Business",
+        "threshold": 10,
+        "comparisonOperator": "GreaterThanThreshold",
+        "evaluationPeriods": 2,
+        "period": 900,
+        "statistic": "Sum",
+        "treatMissingData": "notBreaching"
+      },
+      "low-compliance-score": {
+        "metricName": "ComplianceScoreAverage",
+        "namespace": "AiAgent/Business",
+        "threshold": 70,
+        "comparisonOperator": "LessThanThreshold",
+        "evaluationPeriods": 2,
+        "period": 1800,
+        "statistic": "Average",
+        "treatMissingData": "notBreaching"
+      }
+    },
+    "logGroups": {
+      "retention": {
+        "production": 30,
+        "staging": 7,
+        "development": 3
+      },
+      "metricFilters": [
+        {
+          "name": "ErrorCount",
+          "pattern": "{ $.level = \"ERROR\" }",
+          "metricTransformation": {
+            "metricName": "ErrorCount",
+            "metricNamespace": "AiAgent/Lambda",
+            "metricValue": "1",
+            "defaultValue": 0
+          }
+        },
+        {
+          "name": "PerformanceMetrics",
+          "pattern": "{ $.duration EXISTS }",
+          "metricTransformation": {
+            "metricName": "Duration",
+            "metricNamespace": "AiAgent/Lambda",
+            "metricValue": "$.duration"
+          }
+        },
+        {
+          "name": "BusinessMetrics",
+          "pattern": "{ $.level = \"METRIC\" && $.metricType = \"BUSINESS\" }",
+          "metricTransformation": {
+            "metricName": "BusinessEvents",
+            "metricNamespace": "AiAgent/Business",
+            "metricValue": "$.metricData.Value"
+          }
+        }
+      ]
+    },
+    "xray": {
+      "samplingRules": [
+        {
+          "ruleName": "ai-agent-production",
+          "priority": 9000,
+          "fixedRate": 0.1,
+          "reservoirSize": 1,
+          "serviceName": "ai-agent-system",
+          "serviceType": "*",
+          "host": "*",
+          "httpMethod": "*",
+          "urlPath": "*",
+          "version": 1
+        },
+        {
+          "ruleName": "ai-agent-development",
+          "priority": 9001,
+          "fixedRate": 0.5,
+          "reservoirSize": 2,
+          "serviceName": "ai-agent-system",
+          "serviceType": "*",
+          "host": "*",
+          "httpMethod": "*",
+          "urlPath": "*",
+          "version": 1
+        }
+      ],
+      "annotations": [
+        "operation",
+        "stage",
+        "functionName",
+        "userId",
+        "teamId",
+        "artifactType",
+        "errorType",
+        "correlationId"
+      ]
+    },
+    "autoScaling": {
+      "lambda": {
+        "provisionedConcurrency": {
+          "production": {
+            "ai-agent-artifact-check": {
+              "min": 2,
+              "max": 50,
+              "target": 10
+            },
+            "ai-agent-agent-query": {
+              "min": 3,
+              "max": 75,
+              "target": 15
+            },
+            "ai-agent-kendra-search": {
+              "min": 2,
+              "max": 40,
+              "target": 8
+            }
+          },
+          "staging": {
+            "ai-agent-artifact-check": {
+              "min": 1,
+              "max": 10,
+              "target": 2
+            },
+            "ai-agent-agent-query": {
+              "min": 1,
+              "max": 15,
+              "target": 3
+            },
+            "ai-agent-kendra-search": {
+              "min": 1,
+              "max": 8,
+              "target": 2
+            }
+          }
+        },
+        "reservedConcurrency": {
+          "production": {
+            "ai-agent-artifact-check": 100,
+            "ai-agent-agent-query": 150,
+            "ai-agent-kendra-search": 80,
+            "ai-agent-status-check": 50,
+            "ai-agent-audit": 30
+          },
+          "staging": {
+            "ai-agent-artifact-check": 20,
+            "ai-agent-agent-query": 30,
+            "ai-agent-kendra-search": 15,
+            "ai-agent-status-check": 10,
+            "ai-agent-audit": 5
+          }
+        }
+      },
+      "dynamodb": {
+        "readCapacity": {
+          "production": {
+            "team-roster": { "min": 10, "max": 100, "target": 70 },
+            "audit-log": { "min": 20, "max": 200, "target": 70 },
+            "job-status": { "min": 30, "max": 300, "target": 70 },
+            "artifact-templates": { "min": 5, "max": 50, "target": 70 }
+          },
+          "staging": {
+            "team-roster": { "min": 5, "max": 25, "target": 70 },
+            "audit-log": { "min": 5, "max": 50, "target": 70 },
+            "job-status": { "min": 5, "max": 75, "target": 70 },
+            "artifact-templates": { "min": 3, "max": 15, "target": 70 }
+          }
+        },
+        "writeCapacity": {
+          "production": {
+            "team-roster": { "min": 3, "max": 30, "target": 70 },
+            "audit-log": { "min": 10, "max": 100, "target": 70 },
+            "job-status": { "min": 10, "max": 100, "target": 70 },
+            "artifact-templates": { "min": 2, "max": 20, "target": 70 }
+          },
+          "staging": {
+            "team-roster": { "min": 2, "max": 10, "target": 70 },
+            "audit-log": { "min": 3, "max": 25, "target": 70 },
+            "job-status": { "min": 3, "max": 25, "target": 70 },
+            "artifact-templates": { "min": 1, "max": 5, "target": 70 }
+          }
+        }
+      },
+      "ecs": {
+        "production": {
+          "min": 2,
+          "max": 20,
+          "targetCpuUtilization": 60,
+          "targetMemoryUtilization": 70,
+          "scaleOutCooldown": 180,
+          "scaleInCooldown": 600
+        },
+        "staging": {
+          "min": 1,
+          "max": 5,
+          "targetCpuUtilization": 60,
+          "targetMemoryUtilization": 70,
+          "scaleOutCooldown": 180,
+          "scaleInCooldown": 600
+        }
+      }
+    },
+    "healthChecks": {
+      "endpoints": [
+        {
+          "name": "artifact-check-api",
+          "url": "/health/artifact-check",
+          "timeout": 5000,
+          "interval": 60000
+        },
+        {
+          "name": "kendra-search",
+          "url": "/health/kendra",
+          "timeout": 10000,
+          "interval": 120000
+        },
+        {
+          "name": "database-connection",
+          "url": "/health/database",
+          "timeout": 5000,
+          "interval": 60000
+        }
+      ]
+    },
+    "notifications": {
+      "channels": [
+        {
+          "type": "email",
+          "severity": ["critical", "high"],
+          "recipients": ["ops-team@company.com"]
+        },
+        {
+          "type": "slack",
+          "severity": ["critical", "high", "medium"],
+          "webhook": "${SLACK_WEBHOOK_URL}",
+          "channel": "#ai-agent-alerts"
+        },
+        {
+          "type": "pagerduty",
+          "severity": ["critical"],
+          "integrationKey": "${PAGERDUTY_INTEGRATION_KEY}"
+        }
+      ],
+      "escalation": {
+        "critical": {
+          "immediate": ["slack", "email"],
+          "after5min": ["pagerduty"],
+          "after15min": ["phone"]
+        },
+        "high": {
+          "immediate": ["slack"],
+          "after10min": ["email"],
+          "after30min": ["pagerduty"]
+        },
+        "medium": {
+          "immediate": ["slack"],
+          "after1hour": ["email"]
+        }
+      }
+    }
+  },
+  "troubleshooting": {
+    "commonQueries": [
+      {
+        "name": "Recent Errors",
+        "description": "Find recent errors across all functions",
+        "query": "fields @timestamp, level, message, context.errorType, context.operation | filter level = \"ERROR\" | filter @timestamp > date_sub(now(), interval 1 hour) | sort @timestamp desc | limit 50"
+      },
+      {
+        "name": "Performance Issues",
+        "description": "Find slow requests",
+        "query": "fields @timestamp, duration, context.operation, context.correlationId | filter ispresent(duration) and duration > 5000 | sort @timestamp desc | limit 100"
+      },
+      {
+        "name": "User Activity",
+        "description": "Most active users",
+        "query": "fields @timestamp, context.userId, context.operation | filter ispresent(context.userId) | stats count() by context.userId | sort count desc | limit 20"
+      }
+    ],
+    "runbooks": [
+      {
+        "scenario": "High Error Rate",
+        "steps": [
+          "Check CloudWatch dashboard for error patterns",
+          "Run 'Recent Errors' query to identify error types",
+          "Check X-Ray service map for downstream issues",
+          "Review application logs for specific error details",
+          "Check external service status (Kendra, RDS, etc.)",
+          "Scale up resources if needed",
+          "Contact on-call engineer if errors persist"
+        ]
+      },
+      {
+        "scenario": "High Latency",
+        "steps": [
+          "Check performance dashboard for latency trends",
+          "Run 'Performance Issues' query to find slow requests",
+          "Check X-Ray traces for bottlenecks",
+          "Review auto-scaling metrics",
+          "Check database connection pool status",
+          "Monitor external service response times",
+          "Consider increasing provisioned concurrency"
+        ]
+      },
+      {
+        "scenario": "Circuit Breaker Tripped",
+        "steps": [
+          "Identify which service circuit breaker is open",
+          "Check downstream service health",
+          "Review error patterns leading to circuit breaker activation",
+          "Verify service recovery before manual reset",
+          "Update circuit breaker thresholds if needed"
+        ]
+      }
+    ]
+  }
+}
