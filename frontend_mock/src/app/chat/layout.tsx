@@ -57,30 +57,33 @@ export default function ChatLayout({
         {/* モバイル用サイドバーオーバーレイ */}
         <div
           className={`
-          lg:hidden fixed inset-0 z-50 transition-opacity
+          lg:hidden fixed inset-0 z-50 transition-opacity duration-300
           ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         >
           <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={toggleSidebar}
           />
           <div
             className={`
-            absolute left-0 top-0 h-full w-80 bg-background border-r shadow-lg transform transition-transform
+            absolute left-0 top-0 h-full w-80 bg-background border-r shadow-lg transform transition-transform duration-300 ease-in-out
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
           >
-            <div className="flex justify-end p-4">
+            <div className="flex justify-end p-4 border-b">
               <Button variant="ghost" size="sm" onClick={toggleSidebar}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <ChatHistorySideBar
-              histories={chatHistories}
-              currentChatId={currentChatId}
-              isLoading={isLoading}
-            />
+            <div className="h-full pb-16">
+              <ChatHistorySideBar
+                histories={chatHistories}
+                currentChatId={currentChatId}
+                isLoading={isLoading}
+                isMobile={true}
+              />
+            </div>
           </div>
         </div>
 
@@ -105,11 +108,11 @@ export default function ChatLayout({
         {/* モバイルレイアウト */}
         <div className="lg:hidden flex flex-col h-screen">
           {/* ハンバーガーメニューボタン - 左上固定 */}
-          <div className="absolute top-4 left-4 z-50">
+          <div className="absolute top-4 left-4 z-40">
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm border"
+              className="h-9 w-9 p-0 bg-background/90 backdrop-blur-sm border shadow-sm"
               onClick={toggleSidebar}
             >
               <Menu className="h-4 w-4" />
