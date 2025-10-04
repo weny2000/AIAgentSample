@@ -1,0 +1,58 @@
+# Local Development Configuration
+# This configuration uses local services for development and testing
+
+environment: local
+debug: true
+
+embedding:
+  provider: local
+  model_name: "all-MiniLM-L6-v2"  # Lightweight model for development
+  cache_folder: "./models"
+  device: "cpu"
+  batch_size: 16
+  max_length: 512
+
+vector_database:
+  provider: chromadb
+  persist_directory: "./data/chromadb"
+  default_index_name: "knowledge_base"
+
+storage:
+  provider: local
+  local_storage_path: "./data/storage"
+  max_file_size_mb: 100
+
+task_queue:
+  provider: redis
+  redis_url: "redis://localhost:6379/0"
+  task_timeout: 3600
+  max_retries: 3
+
+state_manager:
+  provider: sqlite
+  sqlite_path: "./data/knowledge_base.db"
+  connection_pool_size: 5
+
+workflow:
+  provider: local
+  max_concurrent_tasks: 2
+  default_timeout: 1800
+
+processing:
+  chunk_size: 1000
+  chunk_overlap: 200
+  max_file_size_mb: 100
+  supported_file_types:
+    - ".pdf"
+    - ".txt"
+    - ".md"
+    - ".docx"
+  request_timeout: 30
+  max_retries: 3
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 1
+  reload: true
+  log_level: "debug"
