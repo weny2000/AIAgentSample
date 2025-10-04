@@ -117,9 +117,9 @@ export default function ChatDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col h-screen">
-        {/* チャット領域左上のタイトル（スケルトン） */}
-        <div className="p-4 pb-2">
+      <div className="flex flex-col h-screen bg-background">
+        {/* ヘッダー（スケルトン） */}
+        <div className="shrink-0 p-4 pb-2 border-b">
           <div className="flex items-center gap-2">
             <Skeleton className="h-6 w-32" />
             <Skeleton className="h-4 w-24" />
@@ -127,14 +127,11 @@ export default function ChatDetailPage() {
         </div>
 
         {/* メインコンテンツスケルトン */}
-        <div
-          className="flex-1 overflow-y-auto"
-          style={{ height: 'calc(100vh - 120px - 60px)' }}
-        >
+        <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex gap-3">
-                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-20 w-full" />
@@ -143,17 +140,21 @@ export default function ChatDetailPage() {
             ))}
           </div>
         </div>
-        <div className="fixed bottom-0 right-0 left-0 lg:left-80 p-3 bg-background/95 backdrop-blur-sm border-t">
-          <Skeleton className="h-20 w-full max-w-[800px] mx-auto" />
+
+        {/* フォーム（スケルトン） */}
+        <div className="shrink-0 border-t bg-background">
+          <div className="p-4">
+            <Skeleton className="h-32 w-full" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen bg-background">
       {/* チャット領域左上のタイトル */}
-      <div className="p-4 pb-2">
+      <div className="shrink-0 p-4 pb-2 pl-16 lg:pl-4 border-b bg-background/95 backdrop-blur-sm">
         <div className="flex items-center gap-2">
           <h1 className="text-lg font-semibold">AI Assistant</h1>
           <span className="text-sm text-muted-foreground">
@@ -164,19 +165,19 @@ export default function ChatDetailPage() {
         </div>
       </div>
 
-      {/* チャットメッセージ表示エリア */}
+      {/* チャットメッセージ表示エリア - フォーム高さを除く */}
       <div
-        className="flex-1 overflow-y-scroll"
+        className="flex-1 overflow-y-auto overscroll-contain"
         ref={scrollAreaRef}
         style={{
-          height: 'calc(100vh - 120px - 60px)',
-          minHeight: '400px',
+          height: 'calc(100vh - 80px - 140px)', // ヘッダー80px + フォーム140px
+          minHeight: '300px',
         }}
       >
-        <div className="px-4 pb-[120px]">
+        <div className="px-4 py-4">
           {currentChat?.messages.length === 0 ? (
             // 初期状態の表示
-            <div className="flex items-center justify-center min-h-[400px]">
+            <div className="flex items-center justify-center min-h-[300px]">
               <div className="text-center space-y-4 max-w-md mx-auto p-8">
                 <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
                   <MessageSquare className="h-8 w-8 text-primary" />
@@ -192,7 +193,7 @@ export default function ChatDetailPage() {
             </div>
           ) : (
             // メッセージ一覧の表示
-            <div className="space-y-2 py-4 min-h-[200px]">
+            <div className="space-y-4 pb-4">
               {currentChat?.messages.map((message, index) => (
                 <ChatMessage key={index} message={message} />
               ))}
@@ -201,9 +202,9 @@ export default function ChatDetailPage() {
 
           {/* 送信中の表示 */}
           {isSubmitting && (
-            <div className="p-4 flex items-center gap-3">
+            <div className="px-4 py-2">
               <div className="animate-pulse flex gap-3 w-full">
-                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-12 w-full" />
@@ -214,9 +215,9 @@ export default function ChatDetailPage() {
         </div>
       </div>
 
-      {/* チャット入力フォーム - 固定配置（コンパクト） */}
-      <div className="fixed bottom-0 right-0 left-0 lg:left-80 p-2 bg-background/95 backdrop-blur-sm border-t z-30">
-        <div className="w-full max-w-none lg:max-w-none mx-0 lg:mx-4">
+      {/* チャット入力フォーム - 下部固定配置 */}
+      <div className="shrink-0 border-t bg-background shadow-lg">
+        <div className="max-w-full p-4">
           <ChatForm
             chatId={chatId}
             onMessageSent={handleMessageSent}
