@@ -5,6 +5,59 @@ import {
   ApiResponse,
 } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
+import { GoogleGenAI } from '@google/genai';
+
+// GoogleGenAI クライアントの初期化
+const ai = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_API_KEY,
+});
+
+// プロンプトを加工する関数
+function buildPrompt(
+  mainPrompt: string,
+  userRole?: string,
+  userSkills?: string
+): string {
+  let prompt = `あなたはこのプロジェクト全体を統括する優秀なプロジェクトマネージャーのアシスタントです。
+以下の質問について、プロジェクトを成功に導くためのアドバイスを提供してください。
+それっぽいことを言ってください。人の名前（日本人）やチーム名も適当に作ってください。
+
+## 回答の形式について
+- 回答は必ずMarkdown形式で出力してください
+- 適切な見出し（#, ##, ###）、箇条書き（-）、番号付きリスト（1.）を使用してください
+- 回答には必ず関連する参考リンクを含めてください
+- 参考リンクは実際のURLでなくても構いません（例：https://example.com/resource、https://docs.example.com/guide など）
+- リンクには適切なタイトルを付けて [タイトル](URL) の形式で記載してください
+- 重要な部分は**太字**や\`コード\`でハイライトしてください
+
+## 質問
+${mainPrompt}`;
+
+  // ユーザープロフィールが入力された場合
+  if (userRole || userSkills) {
+    prompt += `
+
+ユーザーのプロフィール情報を考慮して、より適切なアドバイスを提供してください。
+
+## ユーザープロフィール
+
+`;
+    if (userRole) {
+      prompt += `役割: ${userRole}\n`;
+    }
+    if (userSkills) {
+      prompt += `スキル: ${userSkills}\n`;
+    }
+
+    prompt += `
+## 参考リンクの例
+- 技術的な質問の場合：[公式ドキュメント](https://docs.example.com/api)、[ベストプラクティス](https://example.com/best-practices)
+- プロジェクト管理の質問の場合：[アジャイル開発ガイド](https://example.com/agile-guide)、[プロジェクト計画テンプレート](https://example.com/templates)
+- キャリア関連の質問の場合：[スキルアップリソース](https://example.com/learning)、[業界動向レポート](https://example.com/trends)`;
+  }
+
+  return prompt;
+}
 
 export async function POST(
   request: NextRequest
@@ -24,103 +77,41 @@ export async function POST(
       );
     }
 
-    // 2.0秒の遅延を追加してロード状態を確認できるようにする
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // API キーの確認
+    if (!process.env.GOOGLE_API_KEY) {
+      console.error('GOOGLE_API_KEY is not set');
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Google API key is not configured',
+        },
+        { status: 500 }
+      );
+    }
 
-    // モックレスポンスの生成
-    const mockResponses = [
-      `ご質問いただきありがとうございます。**${message.userRole || 'エンジニア'}**として、**${message.userSkills || '技術スキル'}**を活用した観点からお答えします。
+    // プロンプトの構築
+    const processedPrompt = buildPrompt(
+      message.mainPrompt,
+      message.userRole,
+      message.userSkills
+    );
 
-${message.mainPrompt}について、以下のような観点で考察してみました：
+    // Google Generative AI API の呼び出し
+    const genAIResponse = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: processedPrompt,
+    });
 
-## 主なポイント
+    const aiContent = genAIResponse.text;
 
-- **実装方法**: モダンな技術スタックを活用した効率的なアプローチ
-- **ベストプラクティス**: 業界標準に沿った開発手法の適用
-- **パフォーマンス**: スケーラビリティと保守性を考慮した設計
-
-## 具体的な提案
-
-1. **アーキテクチャ設計**: 要件に応じた最適な技術選択
-2. **実装戦略**: 段階的な開発アプローチ
-3. **品質保証**: テスト駆動開発とコードレビュー
-
-さらに詳しい情報が必要でしたら、具体的な技術的詳細についてもお答えできます。何かご不明な点はございますか？`,
-
-      `**${message.userRole || 'プロフェッショナル'}**の視点から、**${message.userSkills || '専門スキル'}**を踏まえてお答えします。
-
-## ${message.mainPrompt}について
-
-この課題に対する包括的なアプローチをご提案いたします：
-
-### 分析フェーズ
-- 現状の課題と要件の詳細分析
-- ステークホルダーのニーズ把握
-- 技術的制約と機会の評価
-
-### 解決策の設計
-- 最適なソリューションアーキテクチャの構築
-- リスク評価と軽減戦略
-- 実装ロードマップの策定
-
-### 実行計画
-1. 要件定義とプロトタイプ作成
-2. 段階的な実装と検証
-3. パフォーマンステストと最適化
-4. デプロイとモニタリング
-
-### 成功要因
-- チームコラボレーション
-- 継続的な改善
-- ユーザーフィードバックの活用
-
-このアプローチにより、効率的で持続可能なソリューションを実現できると考えています。`,
-
-      `ありがとうございます！**${message.userRole || 'エキスパート'}**としての経験と**${message.userSkills || '専門知識'}**を活かして、詳しく解説いたします。
-
-# ${message.mainPrompt}
-
-## 概要
-
-この分野においては、以下の要素が重要になります：
-
-### 技術的観点
-- **最新技術の活用**: 効率性と革新性のバランス
-- **セキュリティ**: データ保護とプライバシー対策
-- **スケーラビリティ**: 将来の成長を見据えた設計
-
-### ビジネス観点
-- **ROI最大化**: 投資対効果の最適化
-- **ユーザー体験**: 直感的で使いやすいインターフェース
-- **競争優位性**: 市場での差別化要因
-
-## 実装戦略
-
-### フェーズ1: 基盤構築
-- 要件分析と技術選定
-- プロトタイプ開発
-- PoC（概念実証）の実施
-
-### フェーズ2: 開発・テスト
-- アジャイル開発手法の採用
-- 継続的インテグレーション
-- 品質保証プロセス
-
-### フェーズ3: デプロイ・運用
-- 段階的リリース
-- モニタリングとログ分析
-- 継続的改善
-
-詳細について、特定の側面をさらに深掘りしたい点はございますか？`,
-    ];
-
-    // ランダムに応答を選択
-    const randomResponse =
-      mockResponses[Math.floor(Math.random() * mockResponses.length)];
+    // レスポンスの検証
+    if (!aiContent) {
+      throw new Error('No response content received from Gemini API');
+    }
 
     const response: ChatResponseObject = {
       messageId: uuidv4(),
-      content: randomResponse,
+      content: aiContent,
       timestamp: new Date().toISOString(),
     };
 
@@ -130,10 +121,24 @@ ${message.mainPrompt}について、以下のような観点で考察してみ�
     });
   } catch (error) {
     console.error('Error processing chat request:', error);
+
+    // より具体的なエラーメッセージを提供
+    let errorMessage = 'Failed to process chat request';
+
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        errorMessage = 'Google API key configuration error';
+      } else if (error.message.includes('Gemini API')) {
+        errorMessage = 'Failed to get response from Gemini AI';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to process chat request',
+        error: errorMessage,
       },
       { status: 500 }
     );
