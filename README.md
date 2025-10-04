@@ -7,8 +7,10 @@ An AI Agent system that functions as a "digital twin" for team leaders within an
 ```
 ai-agent-system/
 ├── frontend/          # React SPA application
+├── frontend_mock/     # Next.js chat application with strands integration
 ├── backend/           # Serverless backend services
 ├── infrastructure/    # AWS infrastructure as code
+├── strands_agents/    # StrandsAgents Python service
 ├── .kiro/            # Kiro specifications and configuration
 └── package.json      # Root package configuration
 ```
@@ -69,6 +71,48 @@ The system follows a serverless architecture on AWS with:
 - **Search**: Amazon Kendra
 - **Storage**: S3 for documents and artifacts
 - **Authentication**: IAM Identity Center/SAML
+- **AI Agents**: StrandsAgents Python service for intelligent chat
+
+## StrandsAgents Integration
+
+The system includes a Python FastAPI microservice built using strands-agents (sdk-python) that powers a three-agent pipeline:
+
+- **InfoCollector**: extracts search keywords from user input
+- **PeopleFinder**: enriches mock search results with the best person to consult based on an editable people influence graph and preferred contact method
+- **ResponseBuilder**: tailors the final answer to the user's role and skills profile
+
+### Running StrandsAgents Service
+
+1. Start the Python service:
+```bash
+cd strands_agents/service
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn app:app --reload --port 8001
+```
+
+2. Configure the frontend_mock:
+```bash
+cd frontend_mock
+cp .env.local.example .env.local
+# Edit .env.local and set STRANDS_SERVICE_URL=http://localhost:8001
+```
+
+3. Start the Next.js chat application:
+```bash
+cd frontend_mock
+npm install
+npm run dev
+```
+
+Open http://localhost:3000/chat and interact with the AI agents.
+
+### API Endpoints
+
+- `POST /api/strands` - Chat with strands agents
+- `POST /agents/run` - Direct strands service endpoint
+- `POST /search` - Search functionality
 
 ## Development Guidelines
 
