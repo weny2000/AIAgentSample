@@ -1,0 +1,66 @@
+# AWS Production Configuration
+# This configuration uses AWS services for production deployment
+
+environment: production
+debug: false
+
+embedding:
+  provider: aws
+  bedrock_model_id: "amazon.titan-embed-text-v1"
+  aws_region: "us-east-1"
+  batch_size: 32
+  max_length: 512
+
+vector_database:
+  provider: opensearch
+  opensearch_endpoint: "your-opensearch-endpoint.region.es.amazonaws.com"
+  opensearch_index_prefix: "knowledge"
+  aws_region: "us-east-1"
+  default_index_name: "knowledge_base"
+
+storage:
+  provider: s3
+  s3_bucket: "your-knowledge-base-bucket"
+  s3_prefix: "documents/"
+  aws_region: "us-east-1"
+  max_file_size_mb: 500
+
+task_queue:
+  provider: sqs
+  sqs_queue_url: "https://sqs.us-east-1.amazonaws.com/123456789012/knowledge-base-queue"
+  aws_region: "us-east-1"
+  task_timeout: 3600
+  max_retries: 3
+
+state_manager:
+  provider: dynamodb
+  dynamodb_table_name: "knowledge-base-tasks"
+  aws_region: "us-east-1"
+  connection_pool_size: 20
+
+workflow:
+  provider: stepfunctions
+  state_machine_arn: "arn:aws:states:us-east-1:123456789012:stateMachine:knowledge-base-workflow"
+  aws_region: "us-east-1"
+  default_timeout: 1800
+
+processing:
+  chunk_size: 1000
+  chunk_overlap: 200
+  max_file_size_mb: 500
+  supported_file_types:
+    - ".pdf"
+    - ".txt"
+    - ".md"
+    - ".docx"
+    - ".pptx"
+    - ".xlsx"
+  request_timeout: 60
+  max_retries: 5
+
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+  log_level: "info"
