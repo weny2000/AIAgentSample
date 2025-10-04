@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams } from 'next/navigation';
-import { ChatHistoryObject, ApiResponse } from '@/lib/types';
-import { ChatForm } from '@/components/chat/ChatForm';
-import { ChatMessage } from '@/components/chat/ChatMessage';
-import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquare } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { useParams } from "next/navigation";
+import { ChatHistoryObject, ApiResponse } from "@/lib/types";
+import { ChatForm } from "@/components/chat/ChatForm";
+import { ChatMessage } from "@/components/chat/ChatMessage";
+import { Skeleton } from "@/components/ui/skeleton";
+import { MessageSquare } from "lucide-react";
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -38,7 +38,7 @@ export default function ChatDetailPage() {
         });
       }
     } catch (error) {
-      console.error('Error fetching current chat:', error);
+      console.error("Error fetching current chat:", error);
       // エラーの場合も新規チャットとして初期化
       setCurrentChat({
         chatId: id,
@@ -78,7 +78,7 @@ export default function ChatDetailPage() {
         messages: [
           ...currentChat.messages,
           {
-            role: 'user',
+            role: "user",
             content: userMessage,
             timestamp: now,
           },
@@ -90,14 +90,14 @@ export default function ChatDetailPage() {
 
     // アシスタントメッセージが空でない場合は追加
     if (assistantResponse.trim()) {
-      setCurrentChat(prevChat => {
+      setCurrentChat((prevChat) => {
         if (!prevChat) return null;
         return {
           ...prevChat,
           messages: [
             ...prevChat.messages,
             {
-              role: 'assistant',
+              role: "assistant",
               content: assistantResponse,
               timestamp: now,
             },
@@ -117,11 +117,11 @@ export default function ChatDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col" style={{ height: 'calc(100vh - 49px)' }}>
+      <div className="flex flex-col" style={{ height: "calc(100vh - 49px)" }}>
         {/* メインコンテンツスケルトン */}
         <div
           className="flex-1 overflow-y-auto"
-          style={{ height: 'calc(100vh - 49px - 120px)' }}
+          style={{ height: "calc(100vh - 49px - 120px)" }}
         >
           <div className="p-4 space-y-4">
             {[...Array(4)].map((_, i) => (
@@ -143,14 +143,14 @@ export default function ChatDetailPage() {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 49px)' }}>
+    <div className="flex flex-col" style={{ height: "calc(100vh - 49px)" }}>
       {/* チャットメッセージ表示エリア */}
       <div
-        className="flex-1 overflow-y-scroll border border-red-200"
+        className="flex-1 overflow-y-scroll"
         ref={scrollAreaRef}
         style={{
-          height: 'calc(100vh - 49px - 120px)',
-          minHeight: '400px',
+          height: "calc(100vh - 49px - 120px)",
+          minHeight: "400px",
         }}
       >
         <div className="px-4 pb-[120px]">

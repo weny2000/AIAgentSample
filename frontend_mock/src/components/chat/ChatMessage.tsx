@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { MessageObject } from '@/lib/types';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Copy, User, Bot } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { MessageObject } from "@/lib/types";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Copy, User, Bot } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface ChatMessageProps {
   message: MessageObject;
@@ -17,7 +17,7 @@ interface ChatMessageProps {
 
 export function ChatMessage({ message, className }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
-  const isUser = message.role === 'user';
+  const isUser = message.role === "user";
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(message.content);
@@ -26,17 +26,17 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
   };
 
   const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString('ja-JP', {
-      hour: '2-digit',
-      minute: '2-digit',
+    return new Date(timestamp).toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
   return (
     <div
       className={cn(
-        'flex w-full gap-3 p-4',
-        isUser ? 'justify-end' : 'justify-start',
+        "flex w-full gap-3 p-4",
+        isUser ? "justify-end" : "justify-start",
         className
       )}
     >
@@ -52,14 +52,14 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
       {/* メッセージ本体 */}
       <div
         className={cn(
-          'flex flex-col gap-2 max-w-[80%]',
-          isUser ? 'items-end' : 'items-start'
+          "flex flex-col gap-2 max-w-[80%]",
+          isUser ? "items-end" : "items-start"
         )}
       >
         {/* 役割バッジとタイムスタンプ */}
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Badge variant={isUser ? 'default' : 'secondary'}>
-            {isUser ? 'あなた' : 'アシスタント'}
+          <Badge variant={isUser ? "default" : "secondary"}>
+            {isUser ? "あなた" : "アシスタント"}
           </Badge>
           <span>{formatTime(message.timestamp)}</span>
         </div>
@@ -67,10 +67,10 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
         {/* メッセージ内容 */}
         <div
           className={cn(
-            'relative group rounded-lg px-4 py-3 shadow-sm',
+            "relative group rounded-lg px-4 py-3 shadow-sm",
             isUser
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-background border text-foreground'
+              ? "bg-primary text-primary-foreground"
+              : "bg-background border text-foreground"
           )}
         >
           {isUser ? (
@@ -114,7 +114,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
                     <li className="text-current">{children}</li>
                   ),
                   code: ({ children, className, ...props }) => {
-                    const isInline = !className?.includes('language-');
+                    const isInline = !className?.includes("language-");
                     if (isInline) {
                       return (
                         <code
@@ -144,7 +144,7 @@ export function ChatMessage({ message, className }: ChatMessageProps) {
                   a: ({ children, href }) => (
                     <a
                       href={href}
-                      className="text-primary underline hover:no-underline"
+                      className="text-blue-600 dark:text-blue-400 underline hover:no-underline hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
                       target="_blank"
                       rel="noopener noreferrer"
                     >
