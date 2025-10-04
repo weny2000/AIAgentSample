@@ -97,51 +97,27 @@ export default function ChatLayout({
 
           {/* メインコンテンツエリア - 残り領域全体を使用 */}
           <div className="flex-1 flex flex-col h-full">
-            {/* ヘッダー - 固定表示（コンパクト） */}
-            <header className="fixed top-0 right-0 left-0 z-40 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
-              <div className="flex items-center gap-3 max-w-fit">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-semibold">AI Assistant</h1>
-                  <span className="text-xs text-muted-foreground">
-                    {currentChatId ? 'アクティブなチャット' : '新しいチャット'}
-                  </span>
-                </div>
-              </div>
-            </header>
-
             {/* コンテンツエリア */}
-            <div className="flex-1 flex flex-col pt-[49px] w-full">
-              {children}
-            </div>
+            <div className="flex-1 flex flex-col w-full">{children}</div>
           </div>
         </div>
 
-        {/* モバイルレイアウト - 元のレイアウトを維持 */}
+        {/* モバイルレイアウト */}
         <div className="lg:hidden flex flex-col h-screen">
-          {/* ヘッダー - 固定表示（コンパクト） */}
-          <header className="fixed top-0 right-0 left-0 z-40 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
-            <div className="flex items-center gap-3 max-w-fit">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={toggleSidebar}
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold">AI Assistant</h1>
-                <span className="text-xs text-muted-foreground">
-                  {currentChatId ? 'アクティブなチャット' : '新しいチャット'}
-                </span>
-              </div>
-            </div>
-          </header>
+          {/* ハンバーガーメニューボタン - 左上固定 */}
+          <div className="absolute top-4 left-4 z-50">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0 bg-background/80 backdrop-blur-sm border"
+              onClick={toggleSidebar}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </div>
 
           {/* コンテンツエリア */}
-          <div className="flex-1 flex flex-col pt-[49px] w-full">
-            {children}
-          </div>
+          <div className="flex-1 flex flex-col w-full">{children}</div>
         </div>
       </div>
     </SidebarProvider>
