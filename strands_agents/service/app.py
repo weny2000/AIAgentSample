@@ -12,19 +12,21 @@ import os
 try:
     # Try relative imports first (when run as module)
     from .config import load_config
-    from .agents.info_collector import InfoCollector
+    from .agents.keywords_finder import KeywordsFinder
     from .agents.people_finder import PeopleFinder
     from .agents.response_builder import ResponseBuilder
-    from .agents.search_client import SearchClient
+    from .agents.info_finder import InfoFinder
+    from .agents.tacit_finder import TacitFinder
     from .agents.types import SearchResult, IntermediateInfo
 except ImportError:
-    # Fall back to absolute imports (when run directly)
-    from config import load_config
-    from agents.info_collector import InfoCollector
-    from agents.people_finder import PeopleFinder
-    from agents.response_builder import ResponseBuilder
-    from agents.search_client import SearchClient
-    from agents.types import SearchResult, IntermediateInfo
+    # Fall back to fully-qualified package imports (when run directly)
+    from strands_agents.service.config import load_config
+    from strands_agents.service.agents.keywords_finder import KeywordsFinder
+    from strands_agents.service.agents.people_finder import PeopleFinder
+    from strands_agents.service.agents.response_builder import ResponseBuilder
+    from strands_agents.service.agents.info_finder import InfoFinder
+    from strands_agents.service.agents.tacit_finder import TacitFinder
+    from strands_agents.service.agents.types import SearchResult, IntermediateInfo
 
 # Load configuration from .env file
 load_config()
@@ -48,14 +50,27 @@ logging.basicConfig(
 
 app = FastAPI()
 
+# Initialize agents at startup to load models and data only once
+keywords_finder = KeywordsFinder()
+info_finder = InfoFinder()
+tacit_finder = TacitFinder()
+people_finder = PeopleFinder()
+response_builder = ResponseBuilder()
+
 
 class SearchRequest(BaseModel):
+    prompt: Optional[str] = ""
     keywords: List[str]
 
 
 @app.post("/search")
 async def search(req: SearchRequest) -> List[SearchResult]:
-    results = await SearchClient().search(req.keywords or [])
+    results = await info_finder.search(prompt=req.prompt or "", keywords=req.keywords or [])
+    return results
+
+@app.post("/tacit/search")
+async def tacit_search(req: SearchRequest) -> List[SearchResult]:
+    results = await tacit_finder.search(prompt=req.prompt or "", keywords=req.keywords or [])
     return results
 
 
@@ -68,17 +83,25 @@ class RunRequest(BaseModel):
 @app.post("/agents/run")
 async def run_agents(req: RunRequest) -> Dict[str, Any]:
     try:
-        info = await InfoCollector().extract_keywords(req.prompt, req.profile)
-        results = await SearchClient().search(info.keywords)
-        intermediate: IntermediateInfo = await PeopleFinder().select_person(results, info.keywords)
-        content = await ResponseBuilder().build_response(intermediate, req.profile)
+        info = await keywords_finder.extract_keywords(req.prompt, req.profile)
+        results = await info_finder.search(prompt=req.prompt, keywords=info.keywords)
+        tacit_results = await tacit_finder.search(prompt=req.prompt, keywords=info.keywords)
+        results.extend(tacit_results)
+        # Select best matching person
+        intermediate: IntermediateInfo = await people_finder.select_person(results, info.keywords)
+        # Attach tacit knowledge summary to intermediate
+        intermediate.tacit_knowledge = [{"title": r.get("title", ""), "snippet": r.get("snippet", "")} for r in tacit_results[:5]]
+        
+        content = await response_builder.build_response(intermediate, req.profile)
         return {
             "content": content,
             "debug": {
                 "keywords": info.keywords,
                 "selected_person": intermediate.selected_person,
                 "search_summary": intermediate.search_summary,
+                "tacit_knowledge": intermediate.tacit_knowledge,
             },
         }
     except Exception as e:
+        logging.exception("Error during agent run")
         raise HTTPException(status_code=500, detail=str(e))

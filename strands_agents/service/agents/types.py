@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from typing import List, Dict, Optional, TypedDict, Any
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 Profile = Dict[str, Optional[str]]
@@ -33,3 +33,4 @@ class SelectedPerson(TypedDict):
 class IntermediateInfo(BaseModel):
     selected_person: SelectedPerson
     search_summary: List[Dict[str, str]]
+    tacit_knowledge: List[Dict[str, str]] = Field(default_factory=list)

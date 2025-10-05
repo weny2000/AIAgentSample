@@ -45,14 +45,21 @@ class ResponseBuilder:
                 agent = Agent(model=model)
                 sys = (
                     "You are a helpful assistant. Tailor the answer to the user's role and skills. "
-                    "Summarize briefly and include a 'Recommended contact' section with the selected person, "
-                    "their department, and preferred contact."
+                    "Summarize briefly and include sections::"
+                    "'Recommended contact' section with the selected person, their department, and preferred contact."
+                    "'Tacit knowledge' section summarizing tacit knowledge results."
                 )
+                tacit_lines = [f"- {tk.get('title','')}: {tk.get('snippet','')}" for tk in (info.tacit_knowledge or [])]
+                tacit_text = "\n".join(tacit_lines) if tacit_lines else "N/A"
+                summary_lines = [f"- {s.get('title','')}: {s.get('snippet','')}" for s in (info.search_summary or [])]
+                summary_text = "\n".join(summary_lines) if summary_lines else "N/A"
+
                 user = (
                     f"Role: {profile.get('role')}\n"
                     f"Skills: {profile.get('skills')}\n"
                     f"Selected person: {info.selected_person}\n"
-                    f"Search summary: {info.search_summary}\n"
+                    f"Search summary:\n{summary_text}\n"
+                    f"Tacit knowledge:\n{tacit_text}\n"
                     "Provide a concise markdown answer."
                 )
                 try:
@@ -113,4 +120,10 @@ class ResponseBuilder:
         ]
         for item in info.search_summary:
             parts.append(f"- {item.get('title','')}: {item.get('snippet','')}")
+        # Tacit knowledge section
+        if info.tacit_knowledge:
+            parts.append("")
+            parts.append("### 暗黙知")
+            for tk in info.tacit_knowledge:
+                parts.append(f"- {tk.get('title','')}: {tk.get('snippet','')}")
         return "\n".join(parts)

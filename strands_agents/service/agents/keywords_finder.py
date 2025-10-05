@@ -16,7 +16,7 @@ except Exception:
 
 logger = logging.getLogger(__name__)
 
-class InfoCollector:
+class KeywordsFinder:
     async def extract_keywords(self, prompt: str, profile: Profile) -> KeywordsResult:
         keywords = await self._extract_with_llm(prompt, profile)
         if not keywords:

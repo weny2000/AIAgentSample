@@ -17,6 +17,10 @@ ai-agent-system/
 
 ## Getting Started
 
+## Typical prompts
+* I want to build a Next.js App on Amazon Bedrock
+* How can I use Amazon Bedrock and generative AI with LLMs to build an Internal Wiki
+
 ### Prerequisites
 
 - Node.js >= 18.0.0
@@ -85,11 +89,7 @@ The system includes a Python FastAPI microservice built using strands-agents (sd
 
 1. Start the Python service:
 ```bash
-cd strands_agents/service
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-uvicorn app:app --reload --port 8001
+./scripts/start-strands-service.sh
 ```
 
 2. Configure the frontend_mock:
