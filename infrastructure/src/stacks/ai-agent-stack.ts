@@ -16,6 +16,7 @@ import { StepFunctions } from '../constructs/step-functions';
 import { Monitoring } from '../constructs/monitoring';
 import { XRayTracing } from '../constructs/xray-tracing';
 import { AutoScaling } from '../constructs/auto-scaling';
+import { WorkTaskS3Storage } from '../constructs/work-task-s3-storage';
 
 export interface AiAgentStackProps extends cdk.StackProps {
   stage: string;
@@ -29,6 +30,7 @@ export class AiAgentStack extends cdk.Stack {
   public readonly documentsBucket: s3.Bucket;
   public readonly artifactsBucket: s3.Bucket;
   public readonly auditLogsBucket: s3.Bucket;
+  public readonly workTaskS3Storage: WorkTaskS3Storage;
   public readonly iamRoles: IamRoles;
   public readonly authentication: Authentication;
   public readonly authMiddleware: AuthMiddleware;
@@ -115,6 +117,13 @@ export class AiAgentStack extends cdk.Stack {
     this.artifactsBucket = buckets.artifactsBucket;
     this.auditLogsBucket = buckets.auditLogsBucket;
 
+    // Create work task analysis S3 storage
+    this.workTaskS3Storage = new WorkTaskS3Storage(this, 'WorkTaskS3Storage', {
+      stage: props.stage,
+      kmsKey: this.kmsKey,
+      artifactsBucket: this.artifactsBucket,
+    });
+
     // Create security groups
     const securityGroups = this.createSecurityGroups();
     this.lambdaSecurityGroup = securityGroups.lambdaSecurityGroup;
@@ -126,6 +135,7 @@ export class AiAgentStack extends cdk.Stack {
       documentsBucket: this.documentsBucket,
       artifactsBucket: this.artifactsBucket,
       auditLogsBucket: this.auditLogsBucket,
+      workTaskAnalysisBucket: this.workTaskS3Storage.workTaskAnalysisBucket,
       stage: props.stage,
     });
 

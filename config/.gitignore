@@ -1,0 +1,19 @@
+# Ignore all files in this directory except the templates
+*
+
+# But keep these files
+!.gitignore
+!README.md
+!dev.json
+!staging.json
+!production.json
+
+# Ignore any exported configurations (may contain sensitive data)
+*-export.json
+
+# Ignore any backup files
+*.bak
+*.backup
+
+# Ignore any local override files
+*.local.json

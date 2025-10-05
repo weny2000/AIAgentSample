@@ -5,6 +5,7 @@ import { Dashboard } from './pages/Dashboard';
 import { ArtifactUpload } from './pages/ArtifactUpload';
 import { CheckStatus } from './pages/CheckStatus';
 import { AgentQuery } from './pages/AgentQuery';
+import { AgentCore } from './pages/AgentCore';
 import { AdminPanel } from './pages/AdminPanel';
 import { Login } from './pages/Login';
 import { AuthCallback } from './pages/AuthCallback';
@@ -12,6 +13,10 @@ import { AuthLogout } from './pages/AuthLogout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { SessionTimeoutWarning } from './components/SessionTimeoutWarning';
 import { useAuthStore } from './stores/authStore';
+import { WorkTaskSubmission } from './pages/WorkTaskSubmission';
+import { AnalysisResultDemo } from './pages/AnalysisResultDemo';
+import { TodoListDemo } from './pages/TodoListDemo';
+import { DeliverableCheckDemo } from './pages/DeliverableCheckDemo';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -50,6 +55,13 @@ function App() {
                 <Route path="upload" element={<ArtifactUpload />} />
                 <Route path="status/:jobId?" element={<CheckStatus />} />
                 <Route path="query" element={<AgentQuery />} />
+                <Route path="agent" element={<AgentCore />} />
+                
+                {/* Work Task Analysis Demo Routes */}
+                <Route path="work-task-submission" element={<WorkTaskSubmission />} />
+                <Route path="analysis-result-demo" element={<AnalysisResultDemo />} />
+                <Route path="todo-list-demo" element={<TodoListDemo />} />
+                <Route path="deliverable-check-demo" element={<DeliverableCheckDemo />} />
                 
                 {/* Admin routes with role-based access */}
                 <Route 

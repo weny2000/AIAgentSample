@@ -15,6 +15,11 @@ export class DynamoDBTables extends Construct {
   public readonly jobStatusTable: dynamodb.Table;
   public readonly ruleDefinitionsTable: dynamodb.Table;
   public readonly personaConfigTable: dynamodb.Table;
+  
+  // Work Task Analysis System Tables
+  public readonly workTasksTable: dynamodb.Table;
+  public readonly todoItemsTable: dynamodb.Table;
+  public readonly deliverablesTable: dynamodb.Table;
 
   constructor(scope: Construct, id: string, props: DynamoDBTablesProps) {
     super(scope, id);
@@ -306,6 +311,216 @@ export class DynamoDBTables extends Construct {
     cdk.Tags.of(this.personaConfigTable).add('Purpose', 'PersonaManagement');
     cdk.Tags.of(this.personaConfigTable).add('DataClassification', 'Internal');
 
+    // Work Tasks Table
+    // Composite key design with task_id as partition key and created_at as sort key
+    this.workTasksTable = new dynamodb.Table(this, 'WorkTasksTable', {
+      tableName: `ai-agent-work-tasks-${props.stage}`,
+      partitionKey: {
+        name: 'task_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'created_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey: props.kmsKey,
+      pointInTimeRecovery: true,
+      deletionProtection: props.stage === 'prod',
+      removalPolicy: props.stage === 'prod' 
+        ? cdk.RemovalPolicy.RETAIN 
+        : cdk.RemovalPolicy.DESTROY,
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+      timeToLiveAttribute: 'ttl',
+    });
+
+    // Add GSI for querying work tasks by team
+    this.workTasksTable.addGlobalSecondaryIndex({
+      indexName: 'team-index',
+      partitionKey: {
+        name: 'team_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'created_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add GSI for querying work tasks by status
+    this.workTasksTable.addGlobalSecondaryIndex({
+      indexName: 'status-index',
+      partitionKey: {
+        name: 'status',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'updated_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add GSI for querying work tasks by submitter
+    this.workTasksTable.addGlobalSecondaryIndex({
+      indexName: 'submitter-index',
+      partitionKey: {
+        name: 'submitted_by',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'created_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add tags for work tasks table
+    cdk.Tags.of(this.workTasksTable).add('Purpose', 'WorkTaskAnalysis');
+    cdk.Tags.of(this.workTasksTable).add('DataClassification', 'Internal');
+
+    // Todo Items Table
+    // Composite key design with todo_id as partition key and task_id as sort key
+    this.todoItemsTable = new dynamodb.Table(this, 'TodoItemsTable', {
+      tableName: `ai-agent-todo-items-${props.stage}`,
+      partitionKey: {
+        name: 'todo_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'task_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey: props.kmsKey,
+      pointInTimeRecovery: true,
+      deletionProtection: props.stage === 'prod',
+      removalPolicy: props.stage === 'prod' 
+        ? cdk.RemovalPolicy.RETAIN 
+        : cdk.RemovalPolicy.DESTROY,
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+      timeToLiveAttribute: 'ttl',
+    });
+
+    // Add GSI for querying todo items by task
+    this.todoItemsTable.addGlobalSecondaryIndex({
+      indexName: 'task-index',
+      partitionKey: {
+        name: 'task_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'priority',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add GSI for querying todo items by status
+    this.todoItemsTable.addGlobalSecondaryIndex({
+      indexName: 'status-index',
+      partitionKey: {
+        name: 'status',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'updated_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add GSI for querying todo items by assignee
+    this.todoItemsTable.addGlobalSecondaryIndex({
+      indexName: 'assignee-index',
+      partitionKey: {
+        name: 'assigned_to',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'due_date',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add tags for todo items table
+    cdk.Tags.of(this.todoItemsTable).add('Purpose', 'WorkTaskAnalysis');
+    cdk.Tags.of(this.todoItemsTable).add('DataClassification', 'Internal');
+
+    // Deliverables Table
+    // Composite key design with deliverable_id as partition key and todo_id as sort key
+    this.deliverablesTable = new dynamodb.Table(this, 'DeliverablesTable', {
+      tableName: `ai-agent-deliverables-${props.stage}`,
+      partitionKey: {
+        name: 'deliverable_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'todo_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+      encryptionKey: props.kmsKey,
+      pointInTimeRecovery: true,
+      deletionProtection: props.stage === 'prod',
+      removalPolicy: props.stage === 'prod' 
+        ? cdk.RemovalPolicy.RETAIN 
+        : cdk.RemovalPolicy.DESTROY,
+      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+      timeToLiveAttribute: 'ttl',
+    });
+
+    // Add GSI for querying deliverables by todo item
+    this.deliverablesTable.addGlobalSecondaryIndex({
+      indexName: 'todo-index',
+      partitionKey: {
+        name: 'todo_id',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'submitted_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add GSI for querying deliverables by status
+    this.deliverablesTable.addGlobalSecondaryIndex({
+      indexName: 'status-index',
+      partitionKey: {
+        name: 'status',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'submitted_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add GSI for querying deliverables by submitter
+    this.deliverablesTable.addGlobalSecondaryIndex({
+      indexName: 'submitter-index',
+      partitionKey: {
+        name: 'submitted_by',
+        type: dynamodb.AttributeType.STRING,
+      },
+      sortKey: {
+        name: 'submitted_at',
+        type: dynamodb.AttributeType.STRING,
+      },
+      projectionType: dynamodb.ProjectionType.ALL,
+    });
+
+    // Add tags for deliverables table
+    cdk.Tags.of(this.deliverablesTable).add('Purpose', 'WorkTaskAnalysis');
+    cdk.Tags.of(this.deliverablesTable).add('DataClassification', 'Internal');
+
     // Create CloudWatch alarms for monitoring
     this.createCloudWatchAlarms(props.stage);
 
@@ -369,6 +584,36 @@ export class DynamoDBTables extends Construct {
       value: this.personaConfigTable.tableArn,
       exportName: `${cdk.Stack.of(this).stackName}-PersonaConfigTableArn`,
     });
+
+    new cdk.CfnOutput(this, 'WorkTasksTableName', {
+      value: this.workTasksTable.tableName,
+      exportName: `${cdk.Stack.of(this).stackName}-WorkTasksTableName`,
+    });
+
+    new cdk.CfnOutput(this, 'WorkTasksTableArn', {
+      value: this.workTasksTable.tableArn,
+      exportName: `${cdk.Stack.of(this).stackName}-WorkTasksTableArn`,
+    });
+
+    new cdk.CfnOutput(this, 'TodoItemsTableName', {
+      value: this.todoItemsTable.tableName,
+      exportName: `${cdk.Stack.of(this).stackName}-TodoItemsTableName`,
+    });
+
+    new cdk.CfnOutput(this, 'TodoItemsTableArn', {
+      value: this.todoItemsTable.tableArn,
+      exportName: `${cdk.Stack.of(this).stackName}-TodoItemsTableArn`,
+    });
+
+    new cdk.CfnOutput(this, 'DeliverablesTableName', {
+      value: this.deliverablesTable.tableName,
+      exportName: `${cdk.Stack.of(this).stackName}-DeliverablesTableName`,
+    });
+
+    new cdk.CfnOutput(this, 'DeliverablesTableArn', {
+      value: this.deliverablesTable.tableArn,
+      exportName: `${cdk.Stack.of(this).stackName}-DeliverablesTableArn`,
+    });
   }
 
   private createCloudWatchAlarms(stage: string): void {
@@ -380,6 +625,9 @@ export class DynamoDBTables extends Construct {
       { table: this.jobStatusTable, name: 'JobStatus' },
       { table: this.ruleDefinitionsTable, name: 'RuleDefinitions' },
       { table: this.personaConfigTable, name: 'PersonaConfig' },
+      { table: this.workTasksTable, name: 'WorkTasks' },
+      { table: this.todoItemsTable, name: 'TodoItems' },
+      { table: this.deliverablesTable, name: 'Deliverables' },
     ];
 
     tables.forEach(({ table, name }) => {
