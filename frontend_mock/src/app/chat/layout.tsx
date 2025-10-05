@@ -101,7 +101,7 @@ export default function ChatLayout({
             <header className="fixed top-0 right-0 left-0 z-40 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
               <div className="flex items-center gap-3 max-w-fit">
                 <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-semibold">AI Assistant</h1>
+                  <h1 className="text-sm font-semibold">TacitAi(タシタイ)</h1>
                   <span className="text-xs text-muted-foreground">
                     {currentChatId ? 'アクティブなチャット' : '新しいチャット'}
                   </span>
@@ -130,7 +130,7 @@ export default function ChatLayout({
                 <Menu className="h-4 w-4" />
               </Button>
               <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold">AI Assistant</h1>
+                <h1 className="text-sm font-semibold">TacitAi(タシタイ)</h1>
                 <span className="text-xs text-muted-foreground">
                   {currentChatId ? 'アクティブなチャット' : '新しいチャット'}
                 </span>

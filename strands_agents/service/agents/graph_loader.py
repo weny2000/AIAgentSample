@@ -17,6 +17,7 @@ class GraphPerson:
     preferred_contact: Tuple[str, str]
     influences: Dict[str, float]
     expertise: List[str]
+    languages: List[str]
 
 
 class PeopleGraph:
@@ -57,6 +58,8 @@ class PeopleGraph:
             
             # Parse expertise
             expertise = person_data.get("expertise", [])
+            # Parse languages
+            languages = person_data.get("languages", [])
             
             gp = GraphPerson(
                 name=name,
@@ -65,6 +68,7 @@ class PeopleGraph:
                 preferred_contact=pref,
                 influences=influences,
                 expertise=expertise,
+                languages=languages,
             )
             people[gp.name] = gp
         return cls(people)

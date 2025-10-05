@@ -17,6 +17,7 @@ class PeopleFinder:
             "name": chosen.name,
             "department": chosen.department,
             "contact": {"type": chosen.preferred_contact[0], "value": chosen.preferred_contact[1]},
+            "languages": chosen.languages,
         }
         summary = [{"title": r.get("title", ""), "snippet": r.get("snippet", "")} for r in results[:5]]
         return IntermediateInfo(selected_person=selected, search_summary=summary)

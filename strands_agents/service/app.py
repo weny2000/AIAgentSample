@@ -92,7 +92,7 @@ async def run_agents(req: RunRequest) -> Dict[str, Any]:
         # Attach tacit knowledge summary to intermediate
         intermediate.tacit_knowledge = [{"title": r.get("title", ""), "snippet": r.get("snippet", "")} for r in tacit_results[:5]]
         
-        content = await response_builder.build_response(intermediate, req.profile)
+        content = await response_builder.build_response(intermediate, req.profile, req.prompt)
         return {
             "content": content,
             "debug": {

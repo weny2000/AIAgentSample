@@ -108,7 +108,7 @@ export function ChatHistorySideBar({
               </Avatar>
               <div className="flex-1 text-left">
                 <p className="text-sm font-medium">ユーザー</p>
-                <p className="text-xs text-muted-foreground">AI アシスタント</p>
+                <p className="text-xs text-muted-foreground">TacitAi(タシタイ)</p>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </Button>

@@ -10,6 +10,8 @@ people:
         weight: 0.8
       - name: Carol Watanabe
         weight: 0.6
+    languages:
+      - English
     expertise:
       - LLM
       - Next.js
@@ -24,6 +26,8 @@ people:
     influences:
       - name: Alice Tanaka
         weight: 0.5
+    languages:
+      - Japanese
     expertise:
       - AWS
       - Bedrock
@@ -40,6 +44,8 @@ people:
         weight: 0.4
       - name: Bob Suzuki
         weight: 0.3
+    languages:
+      - English
     expertise:
       - Next.js
       - UX

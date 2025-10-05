@@ -162,7 +162,7 @@ export default function ChatDetailPage() {
                   <MessageSquare className="h-8 w-8 text-primary" />
                 </div>
                 <h2 className="text-xl font-semibold">
-                  AI Assistantへようこそ
+                  TacitAi(タシタイ)へようこそ
                 </h2>
                 <p className="text-muted-foreground text-sm">
                   何でもお気軽にご質問ください。あなたの役割とスキルを教えていただければ、

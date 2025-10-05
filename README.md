@@ -20,6 +20,7 @@ ai-agent-system/
 ## Typical prompts
 * I want to build a Next.js App on Amazon Bedrock
 * How can I use Amazon Bedrock and generative AI with LLMs to build an Internal Wiki
+* Next.jsでSEO対策をする方法を教えてください。
 
 ### Prerequisites
 

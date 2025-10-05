@@ -28,6 +28,7 @@ class SelectedPerson(TypedDict):
     name: str
     department: str
     contact: PersonContact
+    languages: List[str]
 
 
 class IntermediateInfo(BaseModel):
