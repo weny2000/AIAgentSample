@@ -8,7 +8,7 @@ set -e
 ENVIRONMENT=${1:-staging}
 DIFF_ONLY=${2}
 
-echo "🏗�E�E Deploying infrastructure to $ENVIRONMENT environment..."
+echo "🏗�E�E Deploying infrastructure to $ENVIRONMENT environment..."
 
 # Validate environment
 if [[ "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "production" ]]; then
@@ -37,6 +37,9 @@ npm ci
 echo "🧪 Running infrastructure tests..."
 npm run test
 
+echo "🏷️  Running tag validation..."
+npm run validate-tags
+
 echo "🔍 Running security checks..."
 npm run security-check
 
@@ -58,7 +61,7 @@ echo "🔒 Running security scan on CloudFormation templates..."
 if command -v checkov &> /dev/null; then
     checkov -d cdk.out --framework cloudformation --quiet
 else
-    echo "⚠�E�E Checkov not installed, skipping security scan"
+    echo "⚠�E�E Checkov not installed, skipping security scan"
 fi
 
 # Show diff
@@ -72,7 +75,7 @@ fi
 
 # Confirmation for production
 if [[ "$ENVIRONMENT" == "production" ]]; then
-    echo "⚠�E�E You are about to deploy to PRODUCTION environment!"
+    echo "⚠�E�E You are about to deploy to PRODUCTION environment!"
     echo "📋 Please review the diff above carefully."
     read -p "Do you want to continue? (yes/no): " -r
     if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
@@ -117,6 +120,10 @@ for stack in "${STACKS[@]}"; do
     fi
 done
 
+# Generate tag documentation
+echo "📚 Generating tag documentation..."
+npm run docs:generate
+
 # Post-deployment validation
 echo "🔍 Running post-deployment validation..."
 
@@ -147,13 +154,22 @@ RDS_STATUS=$(aws rds describe-db-instances --db-instance-identifier ai-agent-db-
 if [[ "$RDS_STATUS" == "available" ]]; then
     echo "✁ERDS instance is available"
 else
-    echo "⚠�E�E RDS instance status: $RDS_STATUS"
+    echo "⚠�E�E RDS instance status: $RDS_STATUS"
 fi
 
 # Check S3 buckets
 echo "Validating S3 buckets..."
 S3_BUCKETS=$(aws s3api list-buckets --query "Buckets[?contains(Name, 'ai-agent') && contains(Name, '$ENVIRONMENT')] | length(@)")
 echo "✁EFound $S3_BUCKETS S3 buckets"
+
+# Validate resource tags
+echo "Validating resource tags..."
+TAG_VALIDATION_RESULT=$(npm run validate-tags 2>&1 || echo "FAILED")
+if [[ "$TAG_VALIDATION_RESULT" == *"FAILED"* ]]; then
+    echo "⚠️ Tag validation warnings found - check logs"
+else
+    echo "✅Resource tags validated successfully"
+fi
 
 # Output stack information
 echo "📊 Deployment Summary:"

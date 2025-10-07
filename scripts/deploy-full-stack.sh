@@ -158,6 +158,11 @@ deploy_infrastructure() {
     npm ci
     npm run build
     
+    # Validate tags before deployment
+    log_info "Validating resource tags..."
+    npm run validate-tags
+    log_success "Tag validation passed"
+    
     if [ "$DRY_RUN" = "true" ]; then
         log_info "Dry run: Showing infrastructure changes..."
         npx cdk diff --context stage="$STAGE"
@@ -169,6 +174,10 @@ deploy_infrastructure() {
             --outputs-file "./cdk-outputs-${STAGE}.json"
         
         log_success "Infrastructure deployed"
+        
+        # Generate tag documentation
+        log_info "Generating tag documentation..."
+        npm run docs:generate
         
         # Export outputs for use in other deployments
         if [ -f "./cdk-outputs-${STAGE}.json" ]; then

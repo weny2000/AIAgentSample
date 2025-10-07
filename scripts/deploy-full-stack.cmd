@@ -142,6 +142,16 @@ cd infrastructure
 call npm ci
 call npm run build
 
+REM Validate tags before deployment
+echo [INFO] Validating resource tags...
+call npm run validate-tags
+if errorlevel 1 (
+    echo [ERROR] Tag validation failed
+    cd ..
+    exit /b 1
+)
+echo [SUCCESS] Tag validation passed
+
 if "%DRY_RUN%"=="true" (
     echo [INFO] Dry run: Showing infrastructure changes...
     call npx cdk diff --context stage=%STAGE%
@@ -153,6 +163,10 @@ if "%DRY_RUN%"=="true" (
         cd ..
         exit /b 1
     )
+    
+    REM Generate tag documentation
+    echo [INFO] Generating tag documentation...
+    call npm run docs:generate
     
     if exist "cdk-outputs-%STAGE%.json" (
         echo [INFO] Exporting CDK outputs...

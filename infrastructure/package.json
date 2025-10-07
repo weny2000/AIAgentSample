@@ -28,7 +28,15 @@
     "config:validate": "ts-node src/scripts/environment-config-manager.ts validate",
     "config:delete": "ts-node src/scripts/environment-config-manager.ts delete",
     "blue-green:deploy": "ts-node src/scripts/blue-green-deployment.ts deploy",
-    "blue-green:rollback": "ts-node src/scripts/blue-green-deployment.ts rollback"
+    "blue-green:rollback": "ts-node src/scripts/blue-green-deployment.ts rollback",
+    "docs:generate": "ts-node scripts/generate-tag-documentation.ts",
+    "docs:generate:dev": "ts-node scripts/generate-tag-documentation.ts dev",
+    "docs:generate:staging": "ts-node scripts/generate-tag-documentation.ts staging",
+    "docs:generate:production": "ts-node scripts/generate-tag-documentation.ts production",
+    "validate-tags": "ts-node src/app.ts --validate-tags-only",
+    "validate-tags:dev": "ts-node src/app.ts --validate-tags-only --context stage=dev",
+    "validate-tags:staging": "ts-node src/app.ts --validate-tags-only --context stage=staging",
+    "validate-tags:production": "ts-node src/app.ts --validate-tags-only --context stage=production"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.899.0",

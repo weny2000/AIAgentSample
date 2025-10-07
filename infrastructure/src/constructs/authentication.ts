@@ -6,11 +6,14 @@ import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
 import { LambdaLayer } from './lambda-layer';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface AuthenticationProps {
   stage: string;
   lambdaExecutionRole: iam.Role;
   apiGatewayRole: iam.Role;
+  skipAuthorizerCreation?: boolean; // For testing purposes
 }
 
 export class Authentication extends Construct {
@@ -21,9 +24,13 @@ export class Authentication extends Construct {
   public readonly authorizer: apigateway.RequestAuthorizer;
   public readonly abacPolicies: iam.ManagedPolicy[];
   public readonly lambdaLayer: LambdaLayer;
+  private readonly tagManager: TagManager;
 
   constructor(scope: Construct, id: string, props: AuthenticationProps) {
     super(scope, id);
+
+    // Initialize TagManager
+    this.tagManager = new TagManager(getTagConfig(props.stage), props.stage);
 
     // Create Lambda layer for dependencies
     this.lambdaLayer = new LambdaLayer(this, 'LambdaLayer', {
@@ -33,18 +40,29 @@ export class Authentication extends Construct {
     // Create Cognito User Pool for OIDC authentication
     this.userPool = this.createUserPool(props);
     this.userPoolClient = this.createUserPoolClient(props);
-    this.identityPool = this.createIdentityPool(props);
 
-    // Create ABAC policies
+    // Create ABAC policies (must be before identity pool)
     this.abacPolicies = this.createAbacPolicies(props);
+
+    // Create identity pool (uses ABAC policies)
+    this.identityPool = this.createIdentityPool(props);
 
     // Create Lambda authorizer for API Gateway
     this.authorizerFunction = this.createAuthorizerFunction(props);
-    this.authorizer = this.createApiGatewayAuthorizer(props);
+    
+    // Create API Gateway authorizer (skip in test environments)
+    if (!props.skipAuthorizerCreation) {
+      this.authorizer = this.createApiGatewayAuthorizer(props);
+    } else {
+      this.authorizer = null as any;
+    }
 
-    // Add tags
-    cdk.Tags.of(this).add('Component', 'Authentication');
-    cdk.Tags.of(this).add('Stage', props.stage);
+    // Add tags to construct
+    const constructTags = this.tagManager.getTagsForResource('cognito', 'Authentication', {
+      Component: 'Security-Cognito',
+      AuthPurpose: 'Authentication',
+    });
+    this.tagManager.applyTags(this, constructTags);
   }
 
   private createUserPool(props: AuthenticationProps): cognito.UserPool {
@@ -152,6 +170,13 @@ export class Authentication extends Construct {
       description: 'SAML provider name for configuration',
     });
 
+    // Apply tags to User Pool
+    const userPoolTags = this.tagManager.getTagsForResource('cognito', 'UserPool', {
+      Component: 'Security-Cognito',
+      AuthPurpose: 'UserAuthentication',
+    });
+    this.tagManager.applyTags(userPool, userPoolTags);
+
     return userPool;
   }
 
@@ -247,6 +272,13 @@ export class Authentication extends Construct {
         },
       }
     );
+
+    // Apply tags to Identity Pool
+    const identityPoolTags = this.tagManager.getTagsForResource('cognito', 'IdentityPool', {
+      Component: 'Security-Cognito',
+      AuthPurpose: 'IdentityManagement',
+    });
+    this.tagManager.applyTags(identityPool, identityPoolTags);
 
     return identityPool;
   }
@@ -397,7 +429,15 @@ export class Authentication extends Construct {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
-    return new lambda.Function(this, 'AuthorizerFunction', {
+    // Apply tags to log group
+    const logGroupTags = this.tagManager.getTagsForResource('cloudwatch', 'AuthorizerLogGroup', {
+      Component: 'Monitoring-CloudWatch',
+      MonitoringType: 'Logs',
+      AssociatedResource: 'AuthorizerFunction',
+    });
+    this.tagManager.applyTags(logGroup, logGroupTags);
+
+    const authorizerFunction = new lambda.Function(this, 'AuthorizerFunction', {
       functionName: `ai-agent-authorizer-${props.stage}`,
       runtime: lambda.Runtime.NODEJS_18_X,
       handler: 'index.handler',
@@ -486,6 +526,15 @@ function generatePolicy(principalId, effect, resource, context = {}) {
 }
       `),
     });
+
+    // Apply tags to Lambda authorizer function
+    const authorizerTags = this.tagManager.getTagsForResource('lambda', 'AuthorizerFunction', {
+      Component: 'Compute-Lambda',
+      FunctionPurpose: 'Authentication',
+    });
+    this.tagManager.applyTags(authorizerFunction, authorizerTags);
+
+    return authorizerFunction;
   }
 
   private createApiGatewayAuthorizer(

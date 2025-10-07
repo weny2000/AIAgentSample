@@ -4,6 +4,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
 import { WorkTaskS3SetupCustomResource } from './work-task-s3-setup-custom-resource';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface WorkTaskS3StorageProps {
   stage: string;
@@ -17,6 +19,10 @@ export class WorkTaskS3Storage extends Construct {
 
   constructor(scope: Construct, id: string, props: WorkTaskS3StorageProps) {
     super(scope, id);
+
+    // Initialize TagManager for consistent tagging
+    const tagConfig = getTagConfig(props.stage);
+    const tagManager = new TagManager(tagConfig, props.stage);
 
     // Create dedicated work task analysis bucket with enhanced security and lifecycle policies
     this.workTaskAnalysisBucket = new s3.Bucket(this, 'WorkTaskAnalysisBucket', {
@@ -133,8 +139,11 @@ export class WorkTaskS3Storage extends Construct {
     // Add intelligent tiering for cost optimization
     this.configureIntelligentTiering();
 
-    // Add tags for resource management
-    this.addResourceTags(props.stage);
+    // Apply resource-specific tags using TagManager
+    tagManager.applyTags(this.workTaskAnalysisBucket, {
+      BucketPurpose: 'WorkTaskAnalysis',
+      DataClassification: 'Internal',
+    });
 
     // Create CloudWatch metrics and alarms
     this.createCloudWatchAlarms(props.stage);
@@ -294,17 +303,6 @@ export class WorkTaskS3Storage extends Construct {
     // IntelligentTieringConfigurations property during bucket creation
     // This is a placeholder for future implementation
     console.log('Intelligent tiering configuration placeholder');
-  }
-
-  private addResourceTags(stage: string): void {
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('Purpose', 'WorkTaskAnalysis');
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('DataClassification', 'Internal');
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('Stage', stage);
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('BackupRequired', 'true');
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('MonitoringEnabled', 'true');
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('CostCenter', 'AI-Agent-System');
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('Owner', 'AI-Agent-Team');
-    cdk.Tags.of(this.workTaskAnalysisBucket).add('Environment', stage);
   }
 
   private createCloudWatchAlarms(stage: string): void {

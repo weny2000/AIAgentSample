@@ -2,6 +2,8 @@ import * as cdk from 'aws-cdk-lib';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface DynamoDBTablesProps {
   stage: string;
@@ -24,6 +26,10 @@ export class DynamoDBTables extends Construct {
   constructor(scope: Construct, id: string, props: DynamoDBTablesProps) {
     super(scope, id);
 
+    // Initialize TagManager for applying resource-specific tags
+    const tagConfig = getTagConfig(props.stage);
+    const tagManager = new TagManager(tagConfig, props.stage);
+
     // Team Roster Table
     // Single table design with team_id as partition key
     this.teamRosterTable = new dynamodb.Table(this, 'TeamRosterTable', {
@@ -44,9 +50,13 @@ export class DynamoDBTables extends Construct {
       timeToLiveAttribute: 'ttl',
     });
 
-    // Add tags for team roster table
-    cdk.Tags.of(this.teamRosterTable).add('Purpose', 'TeamManagement');
-    cdk.Tags.of(this.teamRosterTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const teamRosterTags = tagManager.getResourceTags('dynamodb', 'TeamRosterTable');
+    tagManager.applyTags(this.teamRosterTable, {
+      ...teamRosterTags,
+      TablePurpose: 'TeamManagement',
+      DataClassification: 'Internal',
+    });
 
     // Artifact Templates Table
     // Single table design with artifact_type as partition key
@@ -82,9 +92,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for artifact templates table
-    cdk.Tags.of(this.artifactTemplatesTable).add('Purpose', 'ArtifactValidation');
-    cdk.Tags.of(this.artifactTemplatesTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const artifactTemplatesTags = tagManager.getResourceTags('dynamodb', 'ArtifactTemplatesTable');
+    tagManager.applyTags(this.artifactTemplatesTable, {
+      ...artifactTemplatesTags,
+      TablePurpose: 'ArtifactValidation',
+      DataClassification: 'Internal',
+    });
 
     // Audit Log Table
     // Composite key design with request_id as partition key and timestamp as sort key
@@ -136,10 +150,14 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for audit log table
-    cdk.Tags.of(this.auditLogTable).add('Purpose', 'AuditCompliance');
-    cdk.Tags.of(this.auditLogTable).add('DataClassification', 'Confidential');
-    cdk.Tags.of(this.auditLogTable).add('RetentionPeriod', '7Years');
+    // Apply resource-specific tags using TagManager
+    const auditLogTags = tagManager.getResourceTags('dynamodb', 'AuditLogTable');
+    tagManager.applyTags(this.auditLogTable, {
+      ...auditLogTags,
+      TablePurpose: 'AuditCompliance',
+      DataClassification: 'Confidential',
+      RetentionPeriod: '7Years',
+    });
 
     // Job Status Table
     // Single table design with jobId as partition key for tracking workflow execution status
@@ -189,9 +207,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for job status table
-    cdk.Tags.of(this.jobStatusTable).add('Purpose', 'WorkflowTracking');
-    cdk.Tags.of(this.jobStatusTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const jobStatusTags = tagManager.getResourceTags('dynamodb', 'JobStatusTable');
+    tagManager.applyTags(this.jobStatusTable, {
+      ...jobStatusTags,
+      TablePurpose: 'WorkflowTracking',
+      DataClassification: 'Internal',
+    });
 
     // Rule Definitions Table
     // Single table design with rule id as partition key
@@ -241,9 +263,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for rule definitions table
-    cdk.Tags.of(this.ruleDefinitionsTable).add('Purpose', 'RulesEngine');
-    cdk.Tags.of(this.ruleDefinitionsTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const ruleDefinitionsTags = tagManager.getResourceTags('dynamodb', 'RuleDefinitionsTable');
+    tagManager.applyTags(this.ruleDefinitionsTable, {
+      ...ruleDefinitionsTags,
+      TablePurpose: 'RulesEngine',
+      DataClassification: 'Internal',
+    });
 
     // Persona Configuration Table
     // Single table design with persona id as partition key
@@ -307,9 +333,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for persona config table
-    cdk.Tags.of(this.personaConfigTable).add('Purpose', 'PersonaManagement');
-    cdk.Tags.of(this.personaConfigTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const personaConfigTags = tagManager.getResourceTags('dynamodb', 'PersonaConfigTable');
+    tagManager.applyTags(this.personaConfigTable, {
+      ...personaConfigTags,
+      TablePurpose: 'PersonaManagement',
+      DataClassification: 'Internal',
+    });
 
     // Work Tasks Table
     // Composite key design with task_id as partition key and created_at as sort key
@@ -377,9 +407,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for work tasks table
-    cdk.Tags.of(this.workTasksTable).add('Purpose', 'WorkTaskAnalysis');
-    cdk.Tags.of(this.workTasksTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const workTasksTags = tagManager.getResourceTags('dynamodb', 'WorkTasksTable');
+    tagManager.applyTags(this.workTasksTable, {
+      ...workTasksTags,
+      TablePurpose: 'WorkTaskAnalysis',
+      DataClassification: 'Internal',
+    });
 
     // Todo Items Table
     // Composite key design with todo_id as partition key and task_id as sort key
@@ -447,9 +481,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for todo items table
-    cdk.Tags.of(this.todoItemsTable).add('Purpose', 'WorkTaskAnalysis');
-    cdk.Tags.of(this.todoItemsTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const todoItemsTags = tagManager.getResourceTags('dynamodb', 'TodoItemsTable');
+    tagManager.applyTags(this.todoItemsTable, {
+      ...todoItemsTags,
+      TablePurpose: 'WorkTaskAnalysis',
+      DataClassification: 'Internal',
+    });
 
     // Deliverables Table
     // Composite key design with deliverable_id as partition key and todo_id as sort key
@@ -517,9 +555,13 @@ export class DynamoDBTables extends Construct {
       projectionType: dynamodb.ProjectionType.ALL,
     });
 
-    // Add tags for deliverables table
-    cdk.Tags.of(this.deliverablesTable).add('Purpose', 'WorkTaskAnalysis');
-    cdk.Tags.of(this.deliverablesTable).add('DataClassification', 'Internal');
+    // Apply resource-specific tags using TagManager
+    const deliverablesTags = tagManager.getResourceTags('dynamodb', 'DeliverablesTable');
+    tagManager.applyTags(this.deliverablesTable, {
+      ...deliverablesTags,
+      TablePurpose: 'WorkTaskAnalysis',
+      DataClassification: 'Internal',
+    });
 
     // Create CloudWatch alarms for monitoring
     this.createCloudWatchAlarms(props.stage);

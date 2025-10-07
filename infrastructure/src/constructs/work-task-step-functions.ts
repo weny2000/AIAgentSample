@@ -10,6 +10,8 @@ import * as sns from 'aws-cdk-lib/aws-sns';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface WorkTaskStepFunctionsProps {
   stage: string;
@@ -39,12 +41,22 @@ export class WorkTaskStepFunctions extends Construct {
   constructor(scope: Construct, id: string, props: WorkTaskStepFunctionsProps) {
     super(scope, id);
 
+    // Initialize TagManager for resource tagging
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+
     // Create CloudWatch Log Group
     this.logGroup = new logs.LogGroup(this, 'WorkTaskStepFunctionsLogGroup', {
       logGroupName: `/aws/stepfunctions/work-task-${props.stage}`,
       retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Apply tags to CloudWatch log group
+    tagManager.applyTags(this.logGroup, {
+      ...tagManager.getResourceTags('cloudwatch', 'WorkTaskStepFunctionsLogGroup'),
+      MonitoringType: 'Logs',
+      AssociatedResource: 'StepFunctions-WorkTask',
     });
 
     // Create SNS topic for alerts
@@ -281,7 +293,7 @@ export class WorkTaskStepFunctions extends Construct {
       .next(compileResults)
       .next(workflowSucceeded);
 
-    return new stepfunctions.StateMachine(this, 'TaskAnalysisWorkflow', {
+    const stateMachine = new stepfunctions.StateMachine(this, 'TaskAnalysisWorkflow', {
       stateMachineName: `work-task-analysis-${props.stage}`,
       definition,
       role: props.stepFunctionsRole,
@@ -293,6 +305,15 @@ export class WorkTaskStepFunctions extends Construct {
       tracingEnabled: true,
       timeout: cdk.Duration.minutes(15),
     });
+
+    // Apply tags to state machine
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+    tagManager.applyTags(stateMachine, {
+      ...tagManager.getResourceTags('stepfunctions', 'TaskAnalysisWorkflow'),
+      WorkflowPurpose: 'WorkTaskAnalysis',
+    });
+
+    return stateMachine;
   }
 
   private createDeliverableVerificationWorkflow(props: WorkTaskStepFunctionsProps): stepfunctions.StateMachine {
@@ -371,7 +392,7 @@ export class WorkTaskStepFunctions extends Construct {
       .next(aggregateResults)
       .next(workflowSucceeded);
 
-    return new stepfunctions.StateMachine(this, 'DeliverableVerificationWorkflow', {
+    const stateMachine = new stepfunctions.StateMachine(this, 'DeliverableVerificationWorkflow', {
       stateMachineName: `deliverable-verification-${props.stage}`,
       definition,
       role: props.stepFunctionsRole,
@@ -383,6 +404,15 @@ export class WorkTaskStepFunctions extends Construct {
       tracingEnabled: true,
       timeout: cdk.Duration.minutes(30),
     });
+
+    // Apply tags to state machine
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+    tagManager.applyTags(stateMachine, {
+      ...tagManager.getResourceTags('stepfunctions', 'DeliverableVerificationWorkflow'),
+      WorkflowPurpose: 'DeliverableVerification',
+    });
+
+    return stateMachine;
   }
 
   private createQualityCheckWorkflow(props: WorkTaskStepFunctionsProps): stepfunctions.StateMachine {
@@ -509,7 +539,7 @@ export class WorkTaskStepFunctions extends Construct {
       .next(aggregateQuality)
       .next(workflowSucceeded);
 
-    return new stepfunctions.StateMachine(this, 'QualityCheckWorkflow', {
+    const stateMachine = new stepfunctions.StateMachine(this, 'QualityCheckWorkflow', {
       stateMachineName: `quality-check-${props.stage}`,
       definition,
       role: props.stepFunctionsRole,
@@ -521,6 +551,15 @@ export class WorkTaskStepFunctions extends Construct {
       tracingEnabled: true,
       timeout: cdk.Duration.minutes(15),
     });
+
+    // Apply tags to state machine
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+    tagManager.applyTags(stateMachine, {
+      ...tagManager.getResourceTags('stepfunctions', 'QualityCheckWorkflow'),
+      WorkflowPurpose: 'QualityCheck',
+    });
+
+    return stateMachine;
   }
 
   private addRetryLogic(task: stepfunctions.TaskStateBase): void {

@@ -12,6 +12,8 @@ import * as kms from 'aws-cdk-lib/aws-kms';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface StepFunctionsProps {
   stage: string;
@@ -42,6 +44,9 @@ export class StepFunctions extends Construct {
   constructor(scope: Construct, id: string, props: StepFunctionsProps) {
     super(scope, id);
 
+    // Initialize TagManager for resource tagging
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+
     // Create ECS cluster if not provided
     this.ecsCluster = props.ecsCluster || this.createEcsCluster(props);
 
@@ -55,6 +60,13 @@ export class StepFunctions extends Construct {
       retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
       encryptionKey: props.kmsKey,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Apply tags to CloudWatch log group
+    tagManager.applyTags(this.logGroup, {
+      ...tagManager.getResourceTags('cloudwatch', 'StepFunctionsLogGroup'),
+      MonitoringType: 'Logs',
+      AssociatedResource: 'StepFunctions-ArtifactCheck',
     });
 
     // Create SNS topic for alerts
@@ -100,18 +112,29 @@ export class StepFunctions extends Construct {
       executionRole: props.ecsExecutionRole,
     });
 
+    // Create log group for static checks
+    const staticChecksLogGroup = new logs.LogGroup(this, 'StaticChecksLogGroup', {
+      logGroupName: `/aws/ecs/ai-agent-static-checks-${props.stage}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Apply tags to log group
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+    tagManager.applyTags(staticChecksLogGroup, {
+      ...tagManager.getResourceTags('cloudwatch', 'StaticChecksLogGroup'),
+      MonitoringType: 'Logs',
+      AssociatedResource: 'ECS-StaticChecks',
+    });
+
     // Add container for static analysis tools
     taskDefinition.addContainer('StaticChecksContainer', {
       containerName: 'static-checks',
       image: ecs.ContainerImage.fromRegistry('public.ecr.aws/lambda/nodejs:18'), // Placeholder - will be replaced with custom image
       logging: ecs.LogDrivers.awsLogs({
         streamPrefix: 'static-checks',
-        logGroup: new logs.LogGroup(this, 'StaticChecksLogGroup', {
-          logGroupName: `/aws/ecs/ai-agent-static-checks-${props.stage}`,
-          retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
-          encryptionKey: props.kmsKey,
-          removalPolicy: cdk.RemovalPolicy.DESTROY,
-        }),
+        logGroup: staticChecksLogGroup,
       }),
       environment: {
         STAGE: props.stage,
@@ -132,18 +155,29 @@ export class StepFunctions extends Construct {
       executionRole: props.ecsExecutionRole,
     });
 
+    // Create log group for semantic checks
+    const semanticChecksLogGroup = new logs.LogGroup(this, 'SemanticChecksLogGroup', {
+      logGroupName: `/aws/ecs/ai-agent-semantic-checks-${props.stage}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Apply tags to log group
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+    tagManager.applyTags(semanticChecksLogGroup, {
+      ...tagManager.getResourceTags('cloudwatch', 'SemanticChecksLogGroup'),
+      MonitoringType: 'Logs',
+      AssociatedResource: 'ECS-SemanticChecks',
+    });
+
     // Add container for semantic analysis using LLM
     taskDefinition.addContainer('SemanticChecksContainer', {
       containerName: 'semantic-checks',
       image: ecs.ContainerImage.fromRegistry('public.ecr.aws/lambda/python:3.11'), // Placeholder - will be replaced with custom image
       logging: ecs.LogDrivers.awsLogs({
         streamPrefix: 'semantic-checks',
-        logGroup: new logs.LogGroup(this, 'SemanticChecksLogGroup', {
-          logGroupName: `/aws/ecs/ai-agent-semantic-checks-${props.stage}`,
-          retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
-          encryptionKey: props.kmsKey,
-          removalPolicy: cdk.RemovalPolicy.DESTROY,
-        }),
+        logGroup: semanticChecksLogGroup,
       }),
       environment: {
         STAGE: props.stage,
@@ -435,6 +469,13 @@ export class StepFunctions extends Construct {
       },
       tracingEnabled: true,
       timeout: cdk.Duration.minutes(30), // Maximum workflow execution time
+    });
+
+    // Apply tags to state machine
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+    tagManager.applyTags(stateMachine, {
+      ...tagManager.getResourceTags('stepfunctions', 'ArtifactCheckWorkflow'),
+      WorkflowPurpose: 'ArtifactCompliance',
     });
 
     return stateMachine;
