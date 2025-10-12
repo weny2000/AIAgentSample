@@ -1,3 +1,28 @@
+import { JWT } from 'next-auth/jwt';
+
+// NextAuth JWT トークンの拡張
+declare module 'next-auth/jwt' {
+  interface JWT {
+    cognitoSub?: string;
+    accessToken?: string;
+    refreshToken?: string;
+    username?: string;
+    groups?: string[];
+  }
+}
+
+// NextAuth セッションの拡張
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }
+}
+
 // チャット履歴一覧（サマリー）の型定義
 export interface ChatHistorySummaryObject {
   chatId: string;

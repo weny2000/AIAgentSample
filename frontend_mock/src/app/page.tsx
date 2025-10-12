@@ -2,12 +2,13 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import AuthChatButton from '@/components/AuthChatButton';
+import AuthStatus from '@/components/AuthStatus';
 import {
   MessageSquare,
   Sparkles,
   Zap,
   Shield,
-  ArrowRight,
   Bot,
   Users,
   Globe,
@@ -31,9 +32,7 @@ export default function Home() {
             </div>
             <h1 className="text-xl font-bold">Project AI Assistant</h1>
           </div>
-          <Badge variant="secondary" className="hidden sm:flex">
-            Beta Version
-          </Badge>
+          <AuthStatus />
         </div>
       </header>
 
@@ -54,13 +53,7 @@ export default function Home() {
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/chat">
-                <Button size="lg" className="gap-2 text-lg px-8 py-6">
-                  <MessageSquare className="h-5 w-5" />
-                  チャットを開始
-                  <ArrowRight className="h-5 w-5" />
-                </Button>
-              </Link>
+              <AuthChatButton className="gap-2 text-lg px-8 py-6" />
               <Button variant="outline" size="lg" className="text-lg px-8 py-6">
                 <Globe className="h-5 w-5 mr-2" />
                 デモを見る
@@ -231,13 +224,7 @@ export default function Home() {
               経験豊富なプロジェクトマネージャーの知見を活用して、
               より良い意思決定とチーム運営を実現してください。
             </p>
-            <Link href="/chat">
-              <Button size="lg" className="gap-2 text-lg px-8 py-6">
-                <MessageSquare className="h-5 w-5" />
-                プロジェクトAIに相談する
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
+            <AuthChatButton className="gap-2 text-lg px-8 py-6" />
           </div>
         </section>
       </main>

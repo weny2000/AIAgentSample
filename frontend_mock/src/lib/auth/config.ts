@@ -17,26 +17,51 @@ export const authConfig: NextAuthOptions = {
       clientId: cognitoClientId,
       clientSecret: cognitoClientSecret,
       issuer: cognitoIssuer,
+      // Hosted UIを強制的に使用
+      authorization: {
+        params: {
+          scope: 'email openid profile',
+          response_type: 'code',
+        },
+      },
     }),
   ],
   session: {
     strategy: 'jwt',
   },
+  debug: process.env.NODE_ENV === 'development',
   callbacks: {
-    async jwt({
-      token,
-      account,
-      user,
-    }: {
-      token: JWT;
-      account: Account | null;
-      user: User;
-    }) {
-      // 必要に応じてトークンに情報を追加
+    async jwt({ token, account, user }) {
+      // 初回サインイン時にCognitoの情報を保存
+      if (account && user) {
+        token.cognitoSub = user.id; // プライマリキー（Cognito Sub）
+        token.email = user.email; // 表示用
+        token.accessToken = account.access_token; // AWS API用
+        token.refreshToken = account.refresh_token;
+
+        // ID トークンから追加情報を取得
+        if (account.id_token) {
+          try {
+            const idTokenPayload = JSON.parse(
+              Buffer.from(account.id_token.split('.')[1], 'base64').toString()
+            );
+            token.username = idTokenPayload['cognito:username'];
+            token.groups = idTokenPayload['cognito:groups'] || [];
+          } catch (error) {
+            console.error('ID token parsing error:', error);
+          }
+        }
+      }
       return token;
     },
-    async session({ session, token }: { session: Session; token: JWT }) {
-      // セッションにカスタム情報を追加可能
+
+    async session({ session, token }) {
+      // クライアントにはユーザーIDを送信しない（セキュリティ方針）
+      if (session.user) {
+        session.user.email = token.email;
+        session.user.name = token.name;
+      }
+      // token.cognitoSub はサーバー側でのみ使用し、クライアントには送信しない
       return session;
     },
   },
