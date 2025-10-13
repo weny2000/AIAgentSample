@@ -1,0 +1,265 @@
+{
+  "tableName": "ai-agent-team-roster",
+  "description": "Workgroup skill matrices and capacity information",
+  "items": [
+    {
+      "team_id": "frontend-team",
+      "team_name": "Frontend Engineering Team",
+      "skills": [
+        {
+          "skill_name": "React",
+          "proficiency_level": "expert",
+          "years_experience": 5,
+          "confidence_score": 0.95
+        },
+        {
+          "skill_name": "TypeScript",
+          "proficiency_level": "expert",
+          "years_experience": 4,
+          "confidence_score": 0.92
+        },
+        {
+          "skill_name": "CSS/Tailwind",
+          "proficiency_level": "advanced",
+          "years_experience": 6,
+          "confidence_score": 0.88
+        },
+        {
+          "skill_name": "UI/UX Design",
+          "proficiency_level": "advanced",
+          "years_experience": 4,
+          "confidence_score": 0.85
+        },
+        {
+          "skill_name": "Accessibility",
+          "proficiency_level": "intermediate",
+          "years_experience": 3,
+          "confidence_score": 0.75
+        }
+      ],
+      "expertise_areas": ["web-development", "user-interface", "responsive-design", "performance-optimization"],
+      "capacity_metrics": {
+        "current_workload": 75,
+        "available_hours_per_week": 40,
+        "committed_hours_per_week": 30,
+        "efficiency_rating": 0.88,
+        "collaboration_rating": 0.92
+      },
+      "historical_performance": {
+        "completed_projects": 45,
+        "success_rate": 0.91,
+        "average_delivery_time": 14,
+        "quality_score": 0.87,
+        "collaboration_feedback": 0.89
+      },
+      "availability_status": "available",
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "team_id": "backend-team",
+      "team_name": "Backend Engineering Team",
+      "skills": [
+        {
+          "skill_name": "Node.js",
+          "proficiency_level": "expert",
+          "years_experience": 6,
+          "confidence_score": 0.96
+        },
+        {
+          "skill_name": "TypeScript",
+          "proficiency_level": "expert",
+          "years_experience": 5,
+          "confidence_score": 0.94
+        },
+        {
+          "skill_name": "AWS",
+          "proficiency_level": "advanced",
+          "years_experience": 5,
+          "confidence_score": 0.90
+        },
+        {
+          "skill_name": "DynamoDB",
+          "proficiency_level": "advanced",
+          "years_experience": 4,
+          "confidence_score": 0.87
+        },
+        {
+          "skill_name": "PostgreSQL",
+          "proficiency_level": "advanced",
+          "years_experience": 6,
+          "confidence_score": 0.89
+        },
+        {
+          "skill_name": "API Design",
+          "proficiency_level": "expert",
+          "years_experience": 7,
+          "confidence_score": 0.93
+        }
+      ],
+      "expertise_areas": ["api-development", "database-design", "microservices", "serverless"],
+      "capacity_metrics": {
+        "current_workload": 80,
+        "available_hours_per_week": 40,
+        "committed_hours_per_week": 32,
+        "efficiency_rating": 0.90,
+        "collaboration_rating": 0.88
+      },
+      "historical_performance": {
+        "completed_projects": 52,
+        "success_rate": 0.94,
+        "average_delivery_time": 12,
+        "quality_score": 0.91,
+        "collaboration_feedback": 0.87
+      },
+      "availability_status": "busy",
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "team_id": "devops-team",
+      "team_name": "DevOps & Infrastructure Team",
+      "skills": [
+        {
+          "skill_name": "AWS CDK",
+          "proficiency_level": "expert",
+          "years_experience": 4,
+          "confidence_score": 0.92
+        },
+        {
+          "skill_name": "Terraform",
+          "proficiency_level": "advanced",
+          "years_experience": 5,
+          "confidence_score": 0.88
+        },
+        {
+          "skill_name": "Kubernetes",
+          "proficiency_level": "advanced",
+          "years_experience": 4,
+          "confidence_score": 0.85
+        },
+        {
+          "skill_name": "CI/CD",
+          "proficiency_level": "expert",
+          "years_experience": 6,
+          "confidence_score": 0.94
+        },
+        {
+          "skill_name": "Monitoring",
+          "proficiency_level": "advanced",
+          "years_experience": 5,
+          "confidence_score": 0.89
+        }
+      ],
+      "expertise_areas": ["infrastructure-as-code", "deployment-automation", "monitoring", "security"],
+      "capacity_metrics": {
+        "current_workload": 70,
+        "available_hours_per_week": 40,
+        "committed_hours_per_week": 28,
+        "efficiency_rating": 0.92,
+        "collaboration_rating": 0.90
+      },
+      "historical_performance": {
+        "completed_projects": 38,
+        "success_rate": 0.95,
+        "average_delivery_time": 10,
+        "quality_score": 0.93,
+        "collaboration_feedback": 0.91
+      },
+      "availability_status": "available",
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "team_id": "security-team",
+      "team_name": "Security & Compliance Team",
+      "skills": [
+        {
+          "skill_name": "Security Auditing",
+          "proficiency_level": "expert",
+          "years_experience": 8,
+          "confidence_score": 0.96
+        },
+        {
+          "skill_name": "Penetration Testing",
+          "proficiency_level": "advanced",
+          "years_experience": 6,
+          "confidence_score": 0.90
+        },
+        {
+          "skill_name": "Compliance",
+          "proficiency_level": "expert",
+          "years_experience": 7,
+          "confidence_score": 0.94
+        },
+        {
+          "skill_name": "Encryption",
+          "proficiency_level": "advanced",
+          "years_experience": 5,
+          "confidence_score": 0.88
+        }
+      ],
+      "expertise_areas": ["security-assessment", "compliance-verification", "data-protection", "threat-modeling"],
+      "capacity_metrics": {
+        "current_workload": 65,
+        "available_hours_per_week": 40,
+        "committed_hours_per_week": 26,
+        "efficiency_rating": 0.87,
+        "collaboration_rating": 0.85
+      },
+      "historical_performance": {
+        "completed_projects": 30,
+        "success_rate": 0.97,
+        "average_delivery_time": 8,
+        "quality_score": 0.95,
+        "collaboration_feedback": 0.88
+      },
+      "availability_status": "available",
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "team_id": "qa-team",
+      "team_name": "Quality Assurance Team",
+      "skills": [
+        {
+          "skill_name": "Test Automation",
+          "proficiency_level": "expert",
+          "years_experience": 5,
+          "confidence_score": 0.93
+        },
+        {
+          "skill_name": "Performance Testing",
+          "proficiency_level": "advanced",
+          "years_experience": 4,
+          "confidence_score": 0.87
+        },
+        {
+          "skill_name": "Manual Testing",
+          "proficiency_level": "expert",
+          "years_experience": 7,
+          "confidence_score": 0.95
+        },
+        {
+          "skill_name": "Test Strategy",
+          "proficiency_level": "advanced",
+          "years_experience": 6,
+          "confidence_score": 0.90
+        }
+      ],
+      "expertise_areas": ["test-automation", "quality-assurance", "performance-testing", "test-strategy"],
+      "capacity_metrics": {
+        "current_workload": 72,
+        "available_hours_per_week": 40,
+        "committed_hours_per_week": 29,
+        "efficiency_rating": 0.89,
+        "collaboration_rating": 0.91
+      },
+      "historical_performance": {
+        "completed_projects": 42,
+        "success_rate": 0.93,
+        "average_delivery_time": 11,
+        "quality_score": 0.90,
+        "collaboration_feedback": 0.92
+      },
+      "availability_status": "available",
+      "created_at": "2025-01-01T00:00:00Z"
+    }
+  ]
+}

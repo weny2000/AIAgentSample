@@ -95,3 +95,5 @@ export * from './persona';
 export * from './team-roster';
 export * from './artifact-template';
 export * from './postgresql';
+export * from './agent-core';
+export * from './work-task';

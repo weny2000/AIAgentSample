@@ -10,10 +10,10 @@ export const description = 'Create initial database schema for PostgreSQL tables
 
 export async function up(): Promise<void> {
   console.log('Applying migration: Initial Schema Setup');
-  
+
   // This migration would typically use a database connection
   // For demonstration, we'll just log the SQL that would be executed
-  
+
   const sql = `
     -- Create services table
     CREATE TABLE IF NOT EXISTS services (
@@ -100,7 +100,7 @@ export async function up(): Promise<void> {
 
 export async function down(): Promise<void> {
   console.log('Rolling back migration: Initial Schema Setup');
-  
+
   const sql = `
     -- Drop triggers
     DROP TRIGGER IF EXISTS update_policies_updated_at ON policies;
@@ -132,7 +132,7 @@ export async function down(): Promise<void> {
 
 export async function validate(): Promise<boolean> {
   console.log('Validating migration: Initial Schema Setup');
-  
+
   // In a real implementation, this would check if the tables exist
   // For demonstration, we'll just return true
   return true;

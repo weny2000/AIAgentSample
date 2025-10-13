@@ -4,6 +4,7 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as secretsmanager from 'aws-cdk-lib/aws-secretsmanager';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
 
 export interface RdsPostgreSqlProps {
   vpc: ec2.Vpc;
@@ -160,8 +161,9 @@ export class RdsPostgreSql extends Construct {
     });
 
     // Create read replica for production
+    let readReplica: rds.DatabaseInstanceReadReplica | undefined;
     if (props.stage === 'prod') {
-      new rds.DatabaseInstanceReadReplica(this, 'DatabaseReadReplica', {
+      readReplica = new rds.DatabaseInstanceReadReplica(this, 'DatabaseReadReplica', {
         sourceDatabaseInstance: this.database,
         instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.SMALL),
         vpc: props.vpc,
@@ -195,8 +197,31 @@ export class RdsPostgreSql extends Construct {
       description: 'ARN of the database credentials secret',
     });
 
-    // Add tags
-    cdk.Tags.of(this.database).add('Component', 'Database');
-    cdk.Tags.of(this.database).add('Engine', 'PostgreSQL');
+    // Initialize TagManager
+    const tagManager = new TagManager(null, props.stage);
+
+    // Determine backup policy based on backup retention
+    const backupRetentionDays = props.stage === 'prod' ? 30 : 7;
+    const backupPolicy = backupRetentionDays >= 30 ? 'Daily' : backupRetentionDays >= 7 ? 'Weekly' : 'None';
+
+    // Apply resource-specific tags to RDS instance
+    const rdsTags = tagManager.getResourceTags('rds', 'Database');
+    tagManager.applyTags(this.database, {
+      ...rdsTags,
+      Engine: 'PostgreSQL',
+      DataClassification: 'Confidential',
+      BackupPolicy: backupPolicy,
+    });
+
+    // Apply tags to read replica if it exists (production only)
+    if (readReplica) {
+      tagManager.applyTags(readReplica, {
+        ...rdsTags,
+        Engine: 'PostgreSQL',
+        DataClassification: 'Confidential',
+        BackupPolicy: backupPolicy,
+        ReplicaType: 'ReadReplica',
+      });
+    }
   }
 }

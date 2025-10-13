@@ -7,13 +7,16 @@ export default {
     '<rootDir>/src/**/*.(test|spec).(ts|js)',
   ],
   transform: {
-    '^.+\\.ts$': ['ts-jest', { useESM: true }],
+    '^.+\\.ts$': ['ts-jest', { 
+      useESM: true,
+      tsconfig: {
+        target: 'ES2022',
+      }
+    }],
   },
-  moduleNameMapper: {
-    '^@aws-sdk/(.*)$': '<rootDir>/node_modules/@aws-sdk/$1',
-  },
+
   transformIgnorePatterns: [
-    'node_modules/(?!(@aws-sdk)/)',
+    'node_modules/(?!(@aws-sdk|@smithy)/)',
   ],
   extensionsToTreatAsEsm: ['.ts'],
   collectCoverageFrom: [
@@ -32,5 +35,5 @@ export default {
     },
   },
   testTimeout: 30000,
-  setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
+  // setupFilesAfterEnv: ['<rootDir>/src/test-setup.ts'],
 };

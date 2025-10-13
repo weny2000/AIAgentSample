@@ -5,6 +5,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface ApiGatewayProps {
   stage: string;
@@ -25,6 +27,9 @@ export class ApiGateway extends Construct {
   constructor(scope: Construct, id: string, props: ApiGatewayProps) {
     super(scope, id);
 
+    // Initialize TagManager for resource tagging
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
+
     // Create VPC endpoint for API Gateway
     this.vpcEndpoint = props.vpc.addInterfaceEndpoint('ApiGatewayVpcEndpoint', {
       service: ec2.InterfaceVpcEndpointAwsService.APIGATEWAY,
@@ -38,6 +43,13 @@ export class ApiGateway extends Construct {
       logGroupName: `/aws/apigateway/ai-agent-${props.stage}`,
       retention: logs.RetentionDays.ONE_MONTH,
       removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+
+    // Apply tags to CloudWatch log group
+    tagManager.applyTags(accessLogGroup, {
+      ...tagManager.getResourceTags('cloudwatch', 'ApiGatewayAccessLogs'),
+      MonitoringType: 'Logs',
+      AssociatedResource: 'API-Gateway',
     });
 
     // Create the REST API
@@ -103,6 +115,12 @@ export class ApiGateway extends Construct {
         'image/*',
         'text/plain',
       ],
+    });
+
+    // Apply tags to API Gateway
+    tagManager.applyTags(this.restApi, {
+      ...tagManager.getResourceTags('apigateway', 'AiAgentApi'),
+      ApiPurpose: 'AI Agent System API',
     });
 
     // Create custom authorizer

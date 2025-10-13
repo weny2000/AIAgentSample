@@ -1,11 +1,10 @@
-import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { RulesEngine } from './rules-engine';
 import { RuleRepository } from '../repositories/rule-repository';
-import { 
-  ArtifactValidationRequest, 
-  ValidationReport, 
+import {
+  ArtifactValidationRequest,
+  ValidationReport,
   RuleDefinition,
-  SeverityWeights 
+  SeverityWeights
 } from './types';
 import { logger } from '../lambda/utils/logger';
 
@@ -17,7 +16,7 @@ export class RulesEngineService {
   private constructor() {
     const region = process.env.AWS_REGION || 'us-east-1';
     const tableName = process.env.RULE_DEFINITIONS_TABLE_NAME || 'ai-agent-rule-definitions';
-    
+
     this.ruleRepository = new RuleRepository({
       region,
       tableName
@@ -55,7 +54,7 @@ export class RulesEngineService {
 
     try {
       const report = await this.rulesEngine.validateArtifact(request);
-      
+
       logger.info('RulesEngineService: Validation completed', {
         artifact_id: request.artifact_id,
         overall_score: report.overall_score,
@@ -145,6 +144,84 @@ export class RulesEngineService {
    */
   async getRuleStats() {
     return this.ruleRepository.getRuleStats();
+  }
+
+  /**
+   * Validate content against team policies
+   */
+  async validateContent(content: string, teamId: string): Promise<{
+    compliant: boolean;
+    score: number;
+    violation?: string;
+  }> {
+    try {
+      logger.info('RulesEngineService: Validating content', { teamId, contentLength: content.length });
+
+      // Get team-specific rules
+      const rules = await this.getEnabledRules();
+      const teamRules = rules.filter(rule =>
+        !rule.team_restrictions || rule.team_restrictions.includes(teamId)
+      );
+
+      // Check for policy violations
+      let violations: string[] = [];
+      let totalScore = 1.0;
+
+      for (const rule of teamRules) {
+        if (rule.type === 'semantic' && rule.config.contentValidation) {
+          const ruleConfig = rule.config.contentValidation;
+
+          // Check for prohibited terms
+          if (ruleConfig.prohibitedTerms) {
+            const prohibitedFound = ruleConfig.prohibitedTerms.some((term: string) =>
+              content.toLowerCase().includes(term.toLowerCase())
+            );
+            if (prohibitedFound) {
+              violations.push(`Content contains prohibited terms from rule: ${rule.name}`);
+              totalScore -= rule.severity === 'critical' ? 0.5 : 0.2;
+            }
+          }
+
+          // Check for required terms
+          if (ruleConfig.requiredTerms) {
+            const requiredMissing = ruleConfig.requiredTerms.some((term: string) =>
+              !content.toLowerCase().includes(term.toLowerCase())
+            );
+            if (requiredMissing) {
+              violations.push(`Content missing required terms from rule: ${rule.name}`);
+              totalScore -= rule.severity === 'critical' ? 0.3 : 0.1;
+            }
+          }
+
+          // Check content length limits
+          if (ruleConfig.maxLength && content.length > ruleConfig.maxLength) {
+            violations.push(`Content exceeds maximum length from rule: ${rule.name}`);
+            totalScore -= 0.1;
+          }
+        }
+      }
+
+      const isCompliant = violations.length === 0;
+      const finalScore = Math.max(totalScore, 0);
+
+      logger.info('RulesEngineService: Content validation completed', {
+        teamId,
+        compliant: isCompliant,
+        score: finalScore,
+        violationCount: violations.length
+      });
+
+      return {
+        compliant: isCompliant,
+        score: finalScore,
+        violation: violations.length > 0 ? violations[0] : undefined
+      };
+
+    } catch (error) {
+      logger.error('RulesEngineService: Content validation failed', error);
+      // Fail open for availability
+      return { compliant: true, score: 1.0 };
+    }
   }
 
   /**

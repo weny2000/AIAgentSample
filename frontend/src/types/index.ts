@@ -188,3 +188,6 @@ export interface AuditLogFilter {
   limit?: number;
   offset?: number;
 }
+
+// Re-export agent types
+export * from './agent';

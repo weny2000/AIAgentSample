@@ -1,0 +1,250 @@
+{
+  "tableName": "ai-agent-deliverables",
+  "description": "Quality standards and validation rules for deliverable checking",
+  "items": [
+    {
+      "pk": "STANDARD#code-quality",
+      "sk": "v1.0",
+      "standard_id": "code-quality",
+      "name": "Code Quality Standard",
+      "description": "Standard quality checks for code deliverables",
+      "version": "1.0",
+      "applicable_file_types": [".js", ".ts", ".jsx", ".tsx", ".py", ".java", ".go"],
+      "applicable_categories": ["development", "review"],
+      "is_active": true,
+      "quality_dimensions": [
+        {
+          "dimension_name": "Code Correctness",
+          "dimension_type": "accuracy",
+          "weight": 0.3,
+          "criteria": [
+            {
+              "criteria_name": "No Syntax Errors",
+              "description": "Code must compile/parse without syntax errors",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            },
+            {
+              "criteria_name": "Type Safety",
+              "description": "Proper type annotations and type checking",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Test Coverage",
+          "dimension_type": "completeness",
+          "weight": 0.25,
+          "criteria": [
+            {
+              "criteria_name": "Unit Test Coverage",
+              "description": "Minimum 80% code coverage",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Code Style",
+          "dimension_type": "consistency",
+          "weight": 0.15,
+          "criteria": [
+            {
+              "criteria_name": "Linting Rules",
+              "description": "Passes all linting rules",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Documentation",
+          "dimension_type": "usability",
+          "weight": 0.15,
+          "criteria": [
+            {
+              "criteria_name": "Code Comments",
+              "description": "Adequate inline documentation",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Security",
+          "dimension_type": "security",
+          "weight": 0.15,
+          "criteria": [
+            {
+              "criteria_name": "Security Scan",
+              "description": "No critical security vulnerabilities",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        }
+      ],
+      "quality_gates": [
+        {
+          "gate_name": "Minimum Quality Score",
+          "gate_type": "mandatory",
+          "threshold": 70,
+          "blocking": true,
+          "description": "Overall quality score must be at least 70%"
+        },
+        {
+          "gate_name": "No Critical Issues",
+          "gate_type": "mandatory",
+          "threshold": 0,
+          "blocking": true,
+          "description": "No critical security or correctness issues"
+        }
+      ],
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "pk": "STANDARD#document-quality",
+      "sk": "v1.0",
+      "standard_id": "document-quality",
+      "name": "Document Quality Standard",
+      "description": "Standard quality checks for documentation deliverables",
+      "version": "1.0",
+      "applicable_file_types": [".md", ".pdf", ".docx", ".txt"],
+      "applicable_categories": ["documentation", "review"],
+      "is_active": true,
+      "quality_dimensions": [
+        {
+          "dimension_name": "Content Completeness",
+          "dimension_type": "completeness",
+          "weight": 0.35,
+          "criteria": [
+            {
+              "criteria_name": "Required Sections",
+              "description": "All required sections are present",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Language Quality",
+          "dimension_type": "accuracy",
+          "weight": 0.25,
+          "criteria": [
+            {
+              "criteria_name": "Spelling",
+              "description": "No spelling errors",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            },
+            {
+              "criteria_name": "Grammar",
+              "description": "Proper grammar usage",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Formatting",
+          "dimension_type": "consistency",
+          "weight": 0.2,
+          "criteria": [
+            {
+              "criteria_name": "Format Consistency",
+              "description": "Consistent formatting throughout",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Readability",
+          "dimension_type": "usability",
+          "weight": 0.2,
+          "criteria": [
+            {
+              "criteria_name": "Readability Score",
+              "description": "Appropriate reading level",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        }
+      ],
+      "quality_gates": [
+        {
+          "gate_name": "Minimum Quality Score",
+          "gate_type": "mandatory",
+          "threshold": 75,
+          "blocking": true,
+          "description": "Overall quality score must be at least 75%"
+        }
+      ],
+      "created_at": "2025-01-01T00:00:00Z"
+    },
+    {
+      "pk": "STANDARD#design-quality",
+      "sk": "v1.0",
+      "standard_id": "design-quality",
+      "name": "Design Quality Standard",
+      "description": "Standard quality checks for design deliverables",
+      "version": "1.0",
+      "applicable_file_types": [".fig", ".sketch", ".xd", ".png", ".jpg", ".svg"],
+      "applicable_categories": ["development", "review"],
+      "is_active": true,
+      "quality_dimensions": [
+        {
+          "dimension_name": "Design Completeness",
+          "dimension_type": "completeness",
+          "weight": 0.3,
+          "criteria": [
+            {
+              "criteria_name": "All States Covered",
+              "description": "All UI states are designed",
+              "max_score": 100,
+              "evaluation_method": "manual"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Accessibility",
+          "dimension_type": "usability",
+          "weight": 0.3,
+          "criteria": [
+            {
+              "criteria_name": "Color Contrast",
+              "description": "Meets WCAG AA standards",
+              "max_score": 100,
+              "evaluation_method": "automated"
+            }
+          ]
+        },
+        {
+          "dimension_name": "Consistency",
+          "dimension_type": "consistency",
+          "weight": 0.4,
+          "criteria": [
+            {
+              "criteria_name": "Design System Compliance",
+              "description": "Follows design system guidelines",
+              "max_score": 100,
+              "evaluation_method": "manual"
+            }
+          ]
+        }
+      ],
+      "quality_gates": [
+        {
+          "gate_name": "Minimum Quality Score",
+          "gate_type": "mandatory",
+          "threshold": 70,
+          "blocking": true,
+          "description": "Overall quality score must be at least 70%"
+        }
+      ],
+      "created_at": "2025-01-01T00:00:00Z"
+    }
+  ]
+}

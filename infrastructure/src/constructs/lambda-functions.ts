@@ -1,11 +1,14 @@
 import * as cdk from 'aws-cdk-lib';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as logs from 'aws-cdk-lib/aws-logs';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface LambdaFunctionsProps {
   stage: string;
@@ -30,6 +33,9 @@ export class LambdaFunctions extends Construct {
 
   constructor(scope: Construct, id: string, props: LambdaFunctionsProps) {
     super(scope, id);
+
+    // Initialize TagManager for resource tagging
+    const tagManager = new TagManager(getTagConfig(props.stage), props.stage);
 
     // Create dead letter queue for artifact check processing
     const artifactCheckDLQ = new sqs.Queue(this, 'ArtifactCheckDLQ', {
@@ -155,56 +161,176 @@ export class LambdaFunctions extends Construct {
     };
 
     // Artifact Check Handler Lambda
+    const artifactCheckFunctionName = `ai-agent-artifact-check-${props.stage}`;
+    
+    // Create explicit CloudWatch log group for artifact check handler
+    const artifactCheckLogGroup = new logs.LogGroup(this, 'ArtifactCheckHandlerLogGroup', {
+      logGroupName: `/aws/lambda/${artifactCheckFunctionName}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    
+    // Apply tags to log group
+    tagManager.applyTags(artifactCheckLogGroup, {
+      Component: 'Monitoring-CloudWatch',
+      MonitoringType: 'Logs',
+      AssociatedResource: artifactCheckFunctionName,
+    });
+    
     this.artifactCheckHandler = new lambda.Function(this, 'ArtifactCheckHandler', {
       ...commonLambdaProps,
-      functionName: `ai-agent-artifact-check-${props.stage}`,
+      functionName: artifactCheckFunctionName,
       description: 'Handles artifact check requests and queues them for processing',
       code: lambda.Code.fromAsset('backend/dist/lambda'),
       handler: 'handlers/artifact-check-handler.handler',
       timeout: cdk.Duration.seconds(30),
     });
+    
+    // Apply resource-specific tags to Lambda function
+    tagManager.applyTags(this.artifactCheckHandler, {
+      Component: 'Compute-Lambda',
+      FunctionPurpose: 'ArtifactManagement',
+      Runtime: commonLambdaProps.runtime.name,
+    });
 
     // Status Check Handler Lambda
+    const statusCheckFunctionName = `ai-agent-status-check-${props.stage}`;
+    
+    // Create explicit CloudWatch log group for status check handler
+    const statusCheckLogGroup = new logs.LogGroup(this, 'StatusCheckHandlerLogGroup', {
+      logGroupName: `/aws/lambda/${statusCheckFunctionName}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    
+    // Apply tags to log group
+    tagManager.applyTags(statusCheckLogGroup, {
+      Component: 'Monitoring-CloudWatch',
+      MonitoringType: 'Logs',
+      AssociatedResource: statusCheckFunctionName,
+    });
+    
     this.statusCheckHandler = new lambda.Function(this, 'StatusCheckHandler', {
       ...commonLambdaProps,
-      functionName: `ai-agent-status-check-${props.stage}`,
+      functionName: statusCheckFunctionName,
       description: 'Retrieves status of artifact check jobs',
       code: lambda.Code.fromAsset('backend/dist/lambda'),
       handler: 'handlers/status-check-handler.handler',
       timeout: cdk.Duration.seconds(15),
     });
+    
+    // Apply resource-specific tags to Lambda function
+    tagManager.applyTags(this.statusCheckHandler, {
+      Component: 'Compute-Lambda',
+      FunctionPurpose: 'JobProcessing',
+      Runtime: commonLambdaProps.runtime.name,
+    });
 
     // Agent Query Handler Lambda
+    const agentQueryFunctionName = `ai-agent-query-${props.stage}`;
+    
+    // Create explicit CloudWatch log group for agent query handler
+    const agentQueryLogGroup = new logs.LogGroup(this, 'AgentQueryHandlerLogGroup', {
+      logGroupName: `/aws/lambda/${agentQueryFunctionName}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    
+    // Apply tags to log group
+    tagManager.applyTags(agentQueryLogGroup, {
+      Component: 'Monitoring-CloudWatch',
+      MonitoringType: 'Logs',
+      AssociatedResource: agentQueryFunctionName,
+    });
+    
     this.agentQueryHandler = new lambda.Function(this, 'AgentQueryHandler', {
       ...commonLambdaProps,
-      functionName: `ai-agent-query-${props.stage}`,
+      functionName: agentQueryFunctionName,
       description: 'Handles AI agent queries with persona-based responses',
       code: lambda.Code.fromAsset('backend/dist/lambda'),
       handler: 'handlers/agent-query-handler.handler',
       timeout: cdk.Duration.minutes(2), // Longer timeout for LLM processing
       memorySize: 1024, // More memory for LLM processing
     });
+    
+    // Apply resource-specific tags to Lambda function
+    tagManager.applyTags(this.agentQueryHandler, {
+      Component: 'Compute-Lambda',
+      FunctionPurpose: 'AgentCore',
+      Runtime: commonLambdaProps.runtime.name,
+    });
 
     // Kendra Search Handler Lambda
+    const kendraSearchFunctionName = `ai-agent-kendra-search-${props.stage}`;
+    
+    // Create explicit CloudWatch log group for kendra search handler
+    const kendraSearchLogGroup = new logs.LogGroup(this, 'KendraSearchHandlerLogGroup', {
+      logGroupName: `/aws/lambda/${kendraSearchFunctionName}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    
+    // Apply tags to log group
+    tagManager.applyTags(kendraSearchLogGroup, {
+      Component: 'Monitoring-CloudWatch',
+      MonitoringType: 'Logs',
+      AssociatedResource: kendraSearchFunctionName,
+    });
+    
     this.kendraSearchHandler = new lambda.Function(this, 'KendraSearchHandler', {
       ...commonLambdaProps,
-      functionName: `ai-agent-kendra-search-${props.stage}`,
+      functionName: kendraSearchFunctionName,
       description: 'Handles Kendra search requests with access control verification',
       code: lambda.Code.fromAsset('backend/dist/lambda'),
       handler: 'handlers/kendra-search-handler.handler',
       timeout: cdk.Duration.seconds(30),
       memorySize: 512,
     });
+    
+    // Apply resource-specific tags to Lambda function
+    tagManager.applyTags(this.kendraSearchHandler, {
+      Component: 'Compute-Lambda',
+      FunctionPurpose: 'Search',
+      Runtime: commonLambdaProps.runtime.name,
+    });
 
     // Audit Handler Lambda
+    const auditFunctionName = `ai-agent-audit-${props.stage}`;
+    
+    // Create explicit CloudWatch log group for audit handler
+    const auditLogGroup = new logs.LogGroup(this, 'AuditHandlerLogGroup', {
+      logGroupName: `/aws/lambda/${auditFunctionName}`,
+      retention: props.stage === 'prod' ? logs.RetentionDays.ONE_MONTH : logs.RetentionDays.ONE_WEEK,
+      encryptionKey: props.kmsKey,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+    });
+    
+    // Apply tags to log group
+    tagManager.applyTags(auditLogGroup, {
+      Component: 'Monitoring-CloudWatch',
+      MonitoringType: 'Logs',
+      AssociatedResource: auditFunctionName,
+    });
+    
     this.auditHandler = new lambda.Function(this, 'AuditHandler', {
       ...commonLambdaProps,
-      functionName: `ai-agent-audit-${props.stage}`,
+      functionName: auditFunctionName,
       description: 'Handles audit log operations, compliance reporting, and security event management',
       code: lambda.Code.fromAsset('backend/dist/lambda'),
       handler: 'handlers/audit-handler.handler',
       timeout: cdk.Duration.minutes(5), // Longer timeout for report generation
       memorySize: 1024, // More memory for report processing
+    });
+    
+    // Apply resource-specific tags to Lambda function
+    tagManager.applyTags(this.auditHandler, {
+      Component: 'Compute-Lambda',
+      FunctionPurpose: 'DataProcessing',
+      Runtime: commonLambdaProps.runtime.name,
     });
 
     // Grant permissions to Lambda functions

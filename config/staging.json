@@ -1,0 +1,23 @@
+{
+  "parameters": {
+    "API_GATEWAY_STAGE": "staging",
+    "COGNITO_USER_POOL_ID": "us-east-1_XXXXXXXXX",
+    "COGNITO_CLIENT_ID": "XXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "KENDRA_INDEX_ID": "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
+    "DYNAMODB_TABLE_PREFIX": "ai-agent-staging",
+    "S3_ARTIFACTS_BUCKET": "ai-agent-artifacts-staging",
+    "S3_DOCUMENTS_BUCKET": "ai-agent-documents-staging",
+    "S3_AUDIT_LOGS_BUCKET": "ai-agent-audit-logs-staging",
+    "LOG_LEVEL": "info",
+    "ENABLE_XRAY": "true",
+    "ENABLE_DETAILED_METRICS": "true",
+    "MAX_CONCURRENT_EXECUTIONS": "50",
+    "LAMBDA_TIMEOUT": "300",
+    "LAMBDA_MEMORY_SIZE": "2048"
+  },
+  "secrets": {
+    "DATABASE_PASSWORD": "CHANGE_ME_IN_SECRETS_MANAGER",
+    "JWT_SECRET": "CHANGE_ME_IN_SECRETS_MANAGER",
+    "ENCRYPTION_KEY": "CHANGE_ME_IN_SECRETS_MANAGER"
+  }
+}

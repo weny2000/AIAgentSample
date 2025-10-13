@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatchActions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
@@ -8,6 +9,8 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as applicationautoscaling from 'aws-cdk-lib/aws-applicationautoscaling';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import { Construct } from 'constructs';
+import { TagManager } from '../utils/tag-manager';
+import { getTagConfig } from '../config/tag-config';
 
 export interface MonitoringProps {
   stage: string;
@@ -22,9 +25,13 @@ export class Monitoring extends Construct {
   public readonly dashboard: cloudwatch.Dashboard;
   public readonly logGroups: logs.LogGroup[];
   public readonly alarms: cloudwatch.Alarm[];
+  private readonly tagManager: TagManager;
 
   constructor(scope: Construct, id: string, props: MonitoringProps) {
     super(scope, id);
+
+    // Initialize TagManager
+    this.tagManager = new TagManager(getTagConfig(props.stage), props.stage);
 
     // Create SNS topic for alerts
     this.alertTopic = new sns.Topic(this, 'AlertTopic', {
@@ -32,6 +39,14 @@ export class Monitoring extends Construct {
       displayName: `AI Agent System Alerts (${props.stage})`,
       masterKey: props.kmsKey,
     });
+
+    // Apply tags to SNS topic
+    const snsTopicTags = this.tagManager.getTagsForResource('sns', 'AlertTopic', {
+      Component: 'Monitoring-SNS',
+      MonitoringType: 'Alerts',
+      AlertPurpose: 'SystemAlerts',
+    });
+    this.tagManager.applyTags(this.alertTopic, snsTopicTags);
 
     // Add email subscription if provided
     if (props.alertEmail) {
@@ -195,8 +210,16 @@ export class Monitoring extends Construct {
         removalPolicy: cdk.RemovalPolicy.DESTROY,
       });
 
+      // Apply tags to log group
+      const logGroupTags = this.tagManager.getTagsForResource('cloudwatch', `LogGroup-${func.functionName}`, {
+        MonitoringType: 'Logs',
+        AssociatedResource: func.functionName,
+        LogType: 'Lambda',
+      });
+      this.tagManager.applyTags(logGroup, logGroupTags);
+
       // Create metric filters for structured logging
-      this.createMetricFilters(logGroup, func.functionName);
+      this.createMetricFilters(logGroup, func.functionName, index);
 
       logGroups.push(logGroup);
     });
@@ -209,14 +232,21 @@ export class Monitoring extends Construct {
       removalPolicy: cdk.RemovalPolicy.DESTROY,
     });
 
+    // Apply tags to application log group
+    const appLogGroupTags = this.tagManager.getTagsForResource('cloudwatch', 'ApplicationLogGroup', {
+      MonitoringType: 'Logs',
+      LogType: 'Application',
+    });
+    this.tagManager.applyTags(appLogGroup, appLogGroupTags);
+
     logGroups.push(appLogGroup);
 
     return logGroups;
   }
 
-  private createMetricFilters(logGroup: logs.LogGroup, functionName: string): void {
+  private createMetricFilters(logGroup: logs.LogGroup, functionName: string, index: number): void {
     // Error count metric filter
-    new logs.MetricFilter(this, `ErrorMetricFilter-${functionName}`, {
+    new logs.MetricFilter(this, `ErrorMetricFilter${index}`, {
       logGroup,
       metricNamespace: 'AiAgent/Lambda',
       metricName: 'ErrorCount',
@@ -230,7 +260,7 @@ export class Monitoring extends Construct {
     });
 
     // Performance metric filter
-    new logs.MetricFilter(this, `PerformanceMetricFilter-${functionName}`, {
+    new logs.MetricFilter(this, `PerformanceMetricFilter${index}`, {
       logGroup,
       metricNamespace: 'AiAgent/Lambda',
       metricName: 'Duration',
@@ -243,7 +273,7 @@ export class Monitoring extends Construct {
     });
 
     // Retry metric filter
-    new logs.MetricFilter(this, `RetryMetricFilter-${functionName}`, {
+    new logs.MetricFilter(this, `RetryMetricFilter${index}`, {
       logGroup,
       metricNamespace: 'AiAgent/Lambda',
       metricName: 'RetryAttempts',
@@ -256,7 +286,7 @@ export class Monitoring extends Construct {
     });
 
     // Business metrics filter
-    new logs.MetricFilter(this, `BusinessMetricFilter-${functionName}`, {
+    new logs.MetricFilter(this, `BusinessMetricFilter${index}`, {
       logGroup,
       metricNamespace: 'AiAgent/Business',
       metricName: 'ArtifactChecks',
@@ -494,9 +524,9 @@ This dashboard provides real-time monitoring of the AI Agent system components i
     const alarms: cloudwatch.Alarm[] = [];
 
     // Create alarms for each Lambda function
-    lambdaFunctions.forEach(func => {
+    lambdaFunctions.forEach((func, index) => {
       // Error rate alarm
-      const errorAlarm = new cloudwatch.Alarm(this, `ErrorAlarm-${func.functionName}`, {
+      const errorAlarm = new cloudwatch.Alarm(this, `ErrorAlarm${index}`, {
         alarmName: `ai-agent-${stage}-${func.functionName}-errors`,
         alarmDescription: `High error rate for ${func.functionName}`,
         metric: new cloudwatch.Metric({
@@ -512,11 +542,20 @@ This dashboard provides real-time monitoring of the AI Agent system components i
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
       });
 
-      errorAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alertTopic));
+      // Apply tags to error alarm
+      const errorAlarmTags = this.tagManager.getTagsForResource('cloudwatch', `ErrorAlarm-${func.functionName}`, {
+        MonitoringType: 'Alarms',
+        AlarmType: 'ErrorRate',
+        AssociatedResource: func.functionName,
+        Severity: 'High',
+      });
+      this.tagManager.applyTags(errorAlarm, errorAlarmTags);
+
+      errorAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alertTopic));
       alarms.push(errorAlarm);
 
       // Duration alarm
-      const durationAlarm = new cloudwatch.Alarm(this, `DurationAlarm-${func.functionName}`, {
+      const durationAlarm = new cloudwatch.Alarm(this, `DurationAlarm${index}`, {
         alarmName: `ai-agent-${stage}-${func.functionName}-duration`,
         alarmDescription: `High duration for ${func.functionName}`,
         metric: new cloudwatch.Metric({
@@ -532,11 +571,20 @@ This dashboard provides real-time monitoring of the AI Agent system components i
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
       });
 
-      durationAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alertTopic));
+      // Apply tags to duration alarm
+      const durationAlarmTags = this.tagManager.getTagsForResource('cloudwatch', `DurationAlarm-${func.functionName}`, {
+        MonitoringType: 'Alarms',
+        AlarmType: 'Performance',
+        AssociatedResource: func.functionName,
+        Severity: 'Medium',
+      });
+      this.tagManager.applyTags(durationAlarm, durationAlarmTags);
+
+      durationAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alertTopic));
       alarms.push(durationAlarm);
 
       // Throttle alarm
-      const throttleAlarm = new cloudwatch.Alarm(this, `ThrottleAlarm-${func.functionName}`, {
+      const throttleAlarm = new cloudwatch.Alarm(this, `ThrottleAlarm${index}`, {
         alarmName: `ai-agent-${stage}-${func.functionName}-throttles`,
         alarmDescription: `Throttling detected for ${func.functionName}`,
         metric: new cloudwatch.Metric({
@@ -552,7 +600,16 @@ This dashboard provides real-time monitoring of the AI Agent system components i
         treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
       });
 
-      throttleAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alertTopic));
+      // Apply tags to throttle alarm
+      const throttleAlarmTags = this.tagManager.getTagsForResource('cloudwatch', `ThrottleAlarm-${func.functionName}`, {
+        MonitoringType: 'Alarms',
+        AlarmType: 'Throttling',
+        AssociatedResource: func.functionName,
+        Severity: 'High',
+      });
+      this.tagManager.applyTags(throttleAlarm, throttleAlarmTags);
+
+      throttleAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alertTopic));
       alarms.push(throttleAlarm);
     });
 
@@ -572,7 +629,16 @@ This dashboard provides real-time monitoring of the AI Agent system components i
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
-    criticalIssuesAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alertTopic));
+    // Apply tags to critical issues alarm
+    const criticalIssuesAlarmTags = this.tagManager.getTagsForResource('cloudwatch', 'CriticalIssuesAlarm', {
+      MonitoringType: 'Alarms',
+      AlarmType: 'BusinessMetric',
+      MetricCategory: 'Quality',
+      Severity: 'Critical',
+    });
+    this.tagManager.applyTags(criticalIssuesAlarm, criticalIssuesAlarmTags);
+
+    criticalIssuesAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alertTopic));
     alarms.push(criticalIssuesAlarm);
 
     // Compliance score alarm
@@ -591,7 +657,16 @@ This dashboard provides real-time monitoring of the AI Agent system components i
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
-    complianceAlarm.addAlarmAction(new cloudwatch.SnsAction(this.alertTopic));
+    // Apply tags to compliance alarm
+    const complianceAlarmTags = this.tagManager.getTagsForResource('cloudwatch', 'ComplianceScoreAlarm', {
+      MonitoringType: 'Alarms',
+      AlarmType: 'BusinessMetric',
+      MetricCategory: 'Compliance',
+      Severity: 'High',
+    });
+    this.tagManager.applyTags(complianceAlarm, complianceAlarmTags);
+
+    complianceAlarm.addAlarmAction(new cloudwatchActions.SnsAction(this.alertTopic));
     alarms.push(complianceAlarm);
 
     return alarms;

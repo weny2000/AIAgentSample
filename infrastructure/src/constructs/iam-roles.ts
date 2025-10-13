@@ -9,6 +9,7 @@ export interface IamRolesProps {
   documentsBucket: s3.Bucket;
   artifactsBucket: s3.Bucket;
   auditLogsBucket: s3.Bucket;
+  workTaskAnalysisBucket?: s3.Bucket;
   stage: string;
 }
 
@@ -67,6 +68,21 @@ export class IamRoles extends Construct {
       })
     );
 
+    const s3Resources = [
+      props.documentsBucket.bucketArn,
+      `${props.documentsBucket.bucketArn}/*`,
+      props.artifactsBucket.bucketArn,
+      `${props.artifactsBucket.bucketArn}/*`,
+    ];
+
+    // Add work task analysis bucket if provided
+    if (props.workTaskAnalysisBucket) {
+      s3Resources.push(
+        props.workTaskAnalysisBucket.bucketArn,
+        `${props.workTaskAnalysisBucket.bucketArn}/*`
+      );
+    }
+
     role.addToPolicy(
       new iam.PolicyStatement({
         sid: 'S3Access',
@@ -77,13 +93,11 @@ export class IamRoles extends Construct {
           's3:DeleteObject',
           's3:ListBucket',
           's3:GetObjectVersion',
+          's3:GetObjectAttributes',
+          's3:PutObjectAcl',
+          's3:GetObjectAcl',
         ],
-        resources: [
-          props.documentsBucket.bucketArn,
-          `${props.documentsBucket.bucketArn}/*`,
-          props.artifactsBucket.bucketArn,
-          `${props.artifactsBucket.bucketArn}/*`,
-        ],
+        resources: s3Resources,
       })
     );
 
@@ -228,6 +242,21 @@ export class IamRoles extends Construct {
       })
     );
 
+    const ecsS3Resources = [
+      props.documentsBucket.bucketArn,
+      `${props.documentsBucket.bucketArn}/*`,
+      props.artifactsBucket.bucketArn,
+      `${props.artifactsBucket.bucketArn}/*`,
+    ];
+
+    // Add work task analysis bucket if provided
+    if (props.workTaskAnalysisBucket) {
+      ecsS3Resources.push(
+        props.workTaskAnalysisBucket.bucketArn,
+        `${props.workTaskAnalysisBucket.bucketArn}/*`
+      );
+    }
+
     role.addToPolicy(
       new iam.PolicyStatement({
         sid: 'S3Access',
@@ -237,13 +266,11 @@ export class IamRoles extends Construct {
           's3:PutObject',
           's3:ListBucket',
           's3:GetObjectVersion',
+          's3:GetObjectAttributes',
+          's3:PutObjectAcl',
+          's3:GetObjectAcl',
         ],
-        resources: [
-          props.documentsBucket.bucketArn,
-          `${props.documentsBucket.bucketArn}/*`,
-          props.artifactsBucket.bucketArn,
-          `${props.artifactsBucket.bucketArn}/*`,
-        ],
+        resources: ecsS3Resources,
       })
     );
 

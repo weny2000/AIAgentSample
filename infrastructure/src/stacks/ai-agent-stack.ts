@@ -16,6 +16,10 @@ import { StepFunctions } from '../constructs/step-functions';
 import { Monitoring } from '../constructs/monitoring';
 import { XRayTracing } from '../constructs/xray-tracing';
 import { AutoScaling } from '../constructs/auto-scaling';
+import { WorkTaskS3Storage } from '../constructs/work-task-s3-storage';
+import { TagManager } from '../utils/tag-manager';
+import { TaggingAspect } from '../aspects/tagging-aspect';
+import { getTagConfig } from '../config/tag-config';
 
 export interface AiAgentStackProps extends cdk.StackProps {
   stage: string;
@@ -29,6 +33,7 @@ export class AiAgentStack extends cdk.Stack {
   public readonly documentsBucket: s3.Bucket;
   public readonly artifactsBucket: s3.Bucket;
   public readonly auditLogsBucket: s3.Bucket;
+  public readonly workTaskS3Storage: WorkTaskS3Storage;
   public readonly iamRoles: IamRoles;
   public readonly authentication: Authentication;
   public readonly authMiddleware: AuthMiddleware;
@@ -46,6 +51,25 @@ export class AiAgentStack extends cdk.Stack {
 
   constructor(scope: Construct, id: string, props: AiAgentStackProps) {
     super(scope, id, props);
+
+    // Initialize TagManager with stage configuration
+    const tagConfig = getTagConfig(props.stage);
+    const tagManager = new TagManager(tagConfig, props.stage);
+
+    // Apply mandatory tags at stack level
+    const mandatoryTags = tagManager.getMandatoryTags();
+    Object.entries(mandatoryTags).forEach(([key, value]) => {
+      cdk.Tags.of(this).add(key, value);
+    });
+
+    // Apply environment-specific tags at stack level
+    const environmentTags = tagManager.getEnvironmentTags();
+    Object.entries(environmentTags).forEach(([key, value]) => {
+      cdk.Tags.of(this).add(key, value);
+    });
+
+    // Apply TaggingAspect to automatically tag all resources
+    cdk.Aspects.of(this).add(new TaggingAspect(tagManager));
 
     // Create KMS customer-managed key for encryption
     this.kmsKey = new kms.Key(this, 'AiAgentKmsKey', {
@@ -79,6 +103,12 @@ export class AiAgentStack extends cdk.Stack {
       }),
     });
 
+    // Apply resource-specific tags to KMS key
+    tagManager.applyTags(this.kmsKey, {
+      Component: 'Security-KMS',
+      KeyPurpose: 'GeneralEncryption',
+    });
+
     // Create KMS key alias
     new kms.Alias(this, 'AiAgentKmsKeyAlias', {
       aliasName: `alias/ai-agent-${props.stage}`,
@@ -106,6 +136,23 @@ export class AiAgentStack extends cdk.Stack {
       enableDnsSupport: true,
     });
 
+    // Apply tags to VPC
+    tagManager.applyTags(this.vpc, {
+      Component: 'Network-VPC',
+    });
+
+    // Tag private subnets with NetworkTier and SubnetIndex
+    this.vpc.privateSubnets.forEach((subnet, index) => {
+      cdk.Tags.of(subnet).add('NetworkTier', 'Private');
+      cdk.Tags.of(subnet).add('SubnetIndex', index.toString());
+    });
+
+    // Tag public subnets with NetworkTier and SubnetIndex
+    this.vpc.publicSubnets.forEach((subnet, index) => {
+      cdk.Tags.of(subnet).add('NetworkTier', 'Public');
+      cdk.Tags.of(subnet).add('SubnetIndex', index.toString());
+    });
+
     // Create VPC endpoints for AWS services
     this.createVpcEndpoints();
 
@@ -114,6 +161,13 @@ export class AiAgentStack extends cdk.Stack {
     this.documentsBucket = buckets.documentsBucket;
     this.artifactsBucket = buckets.artifactsBucket;
     this.auditLogsBucket = buckets.auditLogsBucket;
+
+    // Create work task analysis S3 storage
+    this.workTaskS3Storage = new WorkTaskS3Storage(this, 'WorkTaskS3Storage', {
+      stage: props.stage,
+      kmsKey: this.kmsKey,
+      artifactsBucket: this.artifactsBucket,
+    });
 
     // Create security groups
     const securityGroups = this.createSecurityGroups();
@@ -126,8 +180,12 @@ export class AiAgentStack extends cdk.Stack {
       documentsBucket: this.documentsBucket,
       artifactsBucket: this.artifactsBucket,
       auditLogsBucket: this.auditLogsBucket,
+      workTaskAnalysisBucket: this.workTaskS3Storage.workTaskAnalysisBucket,
       stage: props.stage,
     });
+
+    // Apply tag-based access control policies now that IAM roles are created
+    this.applyTagBasedAccessControl();
 
     // Create authentication infrastructure
     this.authentication = new Authentication(this, 'Authentication', {
@@ -252,281 +310,18 @@ export class AiAgentStack extends cdk.Stack {
       // ECS services would be added here when available
     });
 
-    // Add tags to all resources in this stack
-    cdk.Tags.of(this).add('Project', 'AiAgentSystem');
-    cdk.Tags.of(this).add('Stage', props.stage);
+    // Add additional operational tags
     cdk.Tags.of(this).add('MonitoringEnabled', 'true');
     cdk.Tags.of(this).add('XRayEnabled', 'true');
-  }
-
-  private createVpcEndpoints(): void {
-    // S3 Gateway endpoint (no charge)
-    this.vpc.addGatewayEndpoint('S3GatewayEndpoint', {
-      service: ec2.GatewayVpcEndpointAwsService.S3,
-      subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
-    });
-
-    // KMS Interface endpoint
-    this.vpc.addInterfaceEndpoint('KmsEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.KMS,
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      privateDnsEnabled: true,
-    });
-
-    // Secrets Manager Interface endpoint
-    this.vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      privateDnsEnabled: true,
-    });
-
-    // ECR Interface endpoints for container images
-    this.vpc.addInterfaceEndpoint('EcrEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.ECR,
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      privateDnsEnabled: true,
-    });
-
-    this.vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      privateDnsEnabled: true,
-    });
-
-    // STS Interface endpoint for IAM operations
-    this.vpc.addInterfaceEndpoint('StsEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.STS,
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      privateDnsEnabled: true,
-    });
-
-    // Kendra Interface endpoint
-    this.vpc.addInterfaceEndpoint('KendraEndpoint', {
-      service: ec2.InterfaceVpcEndpointAwsService.KENDRA,
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      privateDnsEnabled: true,
-    });
-  }
-
-  private createS3Buckets(stage: string): {
-    documentsBucket: s3.Bucket;
-    artifactsBucket: s3.Bucket;
-    auditLogsBucket: s3.Bucket;
-  } {
-    // Documents bucket for storing ingested content
-    const documentsBucket = new s3.Bucket(this, 'DocumentsBucket', {
-      bucketName: `ai-agent-documents-${stage}-${this.account}`,
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: this.kmsKey,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      versioned: true,
-      lifecycleRules: [
-        {
-          id: 'DeleteOldVersions',
-          enabled: true,
-          noncurrentVersionExpiration: cdk.Duration.days(90),
-        },
-        {
-          id: 'TransitionToIA',
-          enabled: true,
-          transitions: [
-            {
-              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
-              transitionAfter: cdk.Duration.days(30),
-            },
-            {
-              storageClass: s3.StorageClass.GLACIER,
-              transitionAfter: cdk.Duration.days(90),
-            },
-          ],
-        },
-      ],
-      serverAccessLogsPrefix: 'access-logs/',
-    });
-
-    // Artifacts bucket for user uploads and reports
-    const artifactsBucket = new s3.Bucket(this, 'ArtifactsBucket', {
-      bucketName: `ai-agent-artifacts-${stage}-${this.account}`,
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: this.kmsKey,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      versioned: true,
-      lifecycleRules: [
-        {
-          id: 'DeleteOldVersions',
-          enabled: true,
-          noncurrentVersionExpiration: cdk.Duration.days(30),
-        },
-        {
-          id: 'DeleteOldReports',
-          enabled: true,
-          expiration: cdk.Duration.days(365),
-          prefix: 'reports/',
-        },
-      ],
-      cors: [
-        {
-          allowedMethods: [
-            s3.HttpMethods.GET,
-            s3.HttpMethods.POST,
-            s3.HttpMethods.PUT,
-          ],
-          allowedOrigins: ['*'], // Will be restricted to specific domains in production
-          allowedHeaders: ['*'],
-          maxAge: 3000,
-        },
-      ],
-    });
-
-    // Audit logs bucket for compliance and security
-    const auditLogsBucket = new s3.Bucket(this, 'AuditLogsBucket', {
-      bucketName: `ai-agent-audit-logs-${stage}-${this.account}`,
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: this.kmsKey,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      versioned: true,
-      objectLockEnabled: true,
-      objectLockDefaultRetention: s3.ObjectLockRetention.compliance(
-        cdk.Duration.days(2555) // 7 years
-      ),
-      lifecycleRules: [
-        {
-          id: 'TransitionAuditLogs',
-          enabled: true,
-          transitions: [
-            {
-              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
-              transitionAfter: cdk.Duration.days(90),
-            },
-            {
-              storageClass: s3.StorageClass.GLACIER,
-              transitionAfter: cdk.Duration.days(365),
-            },
-            {
-              storageClass: s3.StorageClass.DEEP_ARCHIVE,
-              transitionAfter: cdk.Duration.days(2555), // 7 years
-            },
-          ],
-        },
-      ],
-    });
-
-    // Add bucket notifications and policies
-    this.configureBucketPolicies(documentsBucket, artifactsBucket, auditLogsBucket);
-    
-    return { documentsBucket, artifactsBucket, auditLogsBucket };
-  }
-
-  private configureBucketPolicies(
-    documentsBucket: s3.Bucket,
-    artifactsBucket: s3.Bucket,
-    auditLogsBucket: s3.Bucket
-  ): void {
-    // Deny insecure connections to all buckets
-    const denyInsecureConnections = new iam.PolicyStatement({
-      sid: 'DenyInsecureConnections',
-      effect: iam.Effect.DENY,
-      principals: [new iam.AnyPrincipal()],
-      actions: ['s3:*'],
-      resources: [
-        documentsBucket.bucketArn,
-        `${documentsBucket.bucketArn}/*`,
-        artifactsBucket.bucketArn,
-        `${artifactsBucket.bucketArn}/*`,
-        auditLogsBucket.bucketArn,
-        `${auditLogsBucket.bucketArn}/*`,
-      ],
-      conditions: {
-        Bool: {
-          'aws:SecureTransport': 'false',
-        },
-      },
-    });
-
-    documentsBucket.addToResourcePolicy(denyInsecureConnections);
-    artifactsBucket.addToResourcePolicy(denyInsecureConnections);
-    auditLogsBucket.addToResourcePolicy(denyInsecureConnections);
-
-    // Restrict audit logs bucket to prevent deletion
-    const preventAuditLogDeletion = new iam.PolicyStatement({
-      sid: 'PreventAuditLogDeletion',
-      effect: iam.Effect.DENY,
-      principals: [new iam.AnyPrincipal()],
-      actions: [
-        's3:DeleteObject',
-        's3:DeleteObjectVersion',
-        's3:PutLifecycleConfiguration',
-      ],
-      resources: [
-        auditLogsBucket.bucketArn,
-        `${auditLogsBucket.bucketArn}/*`,
-      ],
-      conditions: {
-        StringNotEquals: {
-          'aws:PrincipalServiceName': 's3.amazonaws.com',
-        },
-      },
-    });
-
-    auditLogsBucket.addToResourcePolicy(preventAuditLogDeletion);
-  }
-
-  private createSecurityGroups(): {
-    lambdaSecurityGroup: ec2.SecurityGroup;
-    ecsSecurityGroup: ec2.SecurityGroup;
-  } {
-    // Security group for Lambda functions
-    const lambdaSecurityGroup = new ec2.SecurityGroup(
-      this,
-      'LambdaSecurityGroup',
-      {
-        vpc: this.vpc,
-        description: 'Security group for Lambda functions',
-        allowAllOutbound: true,
-      }
-    );
-
-    // Security group for ECS tasks
-    const ecsSecurityGroup = new ec2.SecurityGroup(this, 'EcsSecurityGroup', {
-      vpc: this.vpc,
-      description: 'Security group for ECS tasks',
-      allowAllOutbound: true,
-    });
-
-
-
-    // Security group for VPC endpoints
-    const vpcEndpointSecurityGroup = new ec2.SecurityGroup(
-      this,
-      'VpcEndpointSecurityGroup',
-      {
-        vpc: this.vpc,
-        description: 'Security group for VPC endpoints',
-        allowAllOutbound: false,
-      }
-    );
-
-    // Allow HTTPS traffic from Lambda and ECS to VPC endpoints
-    vpcEndpointSecurityGroup.addIngressRule(
-      lambdaSecurityGroup,
-      ec2.Port.tcp(443),
-      'Allow Lambda functions to access VPC endpoints'
-    );
-
-    vpcEndpointSecurityGroup.addIngressRule(
-      ecsSecurityGroup,
-      ec2.Port.tcp(443),
-      'Allow ECS tasks to access VPC endpoints'
-    );
 
     // Export security groups for use in other stacks/constructs
     new cdk.CfnOutput(this, 'LambdaSecurityGroupId', {
-      value: lambdaSecurityGroup.securityGroupId,
+      value: this.lambdaSecurityGroup.securityGroupId,
       exportName: `${this.stackName}-LambdaSecurityGroupId`,
     });
 
     new cdk.CfnOutput(this, 'EcsSecurityGroupId', {
-      value: ecsSecurityGroup.securityGroupId,
+      value: this.ecsSecurityGroup.securityGroupId,
       exportName: `${this.stackName}-EcsSecurityGroupId`,
     });
 
@@ -607,6 +402,403 @@ export class AiAgentStack extends cdk.Stack {
       value: this.iamRoles.stepFunctionsRole.roleArn,
       exportName: `${this.stackName}-StepFunctionsRoleArn`,
     });
+  }
+
+  private createVpcEndpoints(): void {
+    // Initialize TagManager for applying resource-specific tags
+    const tagConfig = getTagConfig(this.node.tryGetContext('stage') || 'dev');
+    const tagManager = new TagManager(tagConfig, this.node.tryGetContext('stage') || 'dev');
+
+    // S3 Gateway endpoint (no charge)
+    const s3Endpoint = this.vpc.addGatewayEndpoint('S3GatewayEndpoint', {
+      service: ec2.GatewayVpcEndpointAwsService.S3,
+      subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
+    });
+    tagManager.applyTags(s3Endpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Gateway',
+      EndpointService: 'S3',
+    });
+
+    // KMS Interface endpoint
+    const kmsEndpoint = this.vpc.addInterfaceEndpoint('KmsEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.KMS,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      privateDnsEnabled: true,
+    });
+    tagManager.applyTags(kmsEndpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Interface',
+      EndpointService: 'KMS',
+    });
+
+    // Secrets Manager Interface endpoint
+    const secretsManagerEndpoint = this.vpc.addInterfaceEndpoint('SecretsManagerEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      privateDnsEnabled: true,
+    });
+    tagManager.applyTags(secretsManagerEndpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Interface',
+      EndpointService: 'SecretsManager',
+    });
+
+    // ECR Interface endpoints for container images
+    const ecrEndpoint = this.vpc.addInterfaceEndpoint('EcrEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      privateDnsEnabled: true,
+    });
+    tagManager.applyTags(ecrEndpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Interface',
+      EndpointService: 'ECR',
+    });
+
+    const ecrDockerEndpoint = this.vpc.addInterfaceEndpoint('EcrDockerEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      privateDnsEnabled: true,
+    });
+    tagManager.applyTags(ecrDockerEndpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Interface',
+      EndpointService: 'ECR-Docker',
+    });
+
+    // STS Interface endpoint for IAM operations
+    const stsEndpoint = this.vpc.addInterfaceEndpoint('StsEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.STS,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      privateDnsEnabled: true,
+    });
+    tagManager.applyTags(stsEndpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Interface',
+      EndpointService: 'STS',
+    });
+
+    // Kendra Interface endpoint
+    const kendraEndpoint = this.vpc.addInterfaceEndpoint('KendraEndpoint', {
+      service: ec2.InterfaceVpcEndpointAwsService.KENDRA,
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      privateDnsEnabled: true,
+    });
+    tagManager.applyTags(kendraEndpoint, {
+      Component: 'Network-VPC',
+      EndpointType: 'Interface',
+      EndpointService: 'Kendra',
+    });
+  }
+
+  private createS3Buckets(stage: string): {
+    documentsBucket: s3.Bucket;
+    artifactsBucket: s3.Bucket;
+    auditLogsBucket: s3.Bucket;
+  } {
+    // Initialize TagManager for applying resource-specific tags
+    const tagConfig = getTagConfig(stage);
+    const tagManager = new TagManager(tagConfig, stage);
+
+    // Documents bucket for storing ingested content
+    const documentsBucket = new s3.Bucket(this, 'DocumentsBucket', {
+      bucketName: `ai-agent-documents-${stage}-${this.account}`,
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: this.kmsKey,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      lifecycleRules: [
+        {
+          id: 'DeleteOldVersions',
+          enabled: true,
+          noncurrentVersionExpiration: cdk.Duration.days(90),
+        },
+        {
+          id: 'TransitionToIA',
+          enabled: true,
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
+              transitionAfter: cdk.Duration.days(30),
+            },
+            {
+              storageClass: s3.StorageClass.GLACIER,
+              transitionAfter: cdk.Duration.days(90),
+            },
+          ],
+        },
+      ],
+      serverAccessLogsPrefix: 'access-logs/',
+    });
+
+    // Apply resource-specific tags to documents bucket
+    tagManager.applyTags(documentsBucket, {
+      BucketPurpose: 'Documents',
+      DataClassification: 'Internal',
+      BackupPolicy: 'Monthly', // Based on lifecycle rules with Glacier transition
+    });
+
+    // Artifacts bucket for user uploads and reports
+    const artifactsBucket = new s3.Bucket(this, 'ArtifactsBucket', {
+      bucketName: `ai-agent-artifacts-${stage}-${this.account}`,
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: this.kmsKey,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      lifecycleRules: [
+        {
+          id: 'DeleteOldVersions',
+          enabled: true,
+          noncurrentVersionExpiration: cdk.Duration.days(30),
+        },
+        {
+          id: 'DeleteOldReports',
+          enabled: true,
+          expiration: cdk.Duration.days(365),
+          prefix: 'reports/',
+        },
+      ],
+      cors: [
+        {
+          allowedMethods: [
+            s3.HttpMethods.GET,
+            s3.HttpMethods.POST,
+            s3.HttpMethods.PUT,
+          ],
+          allowedOrigins: ['*'], // Will be restricted to specific domains in production
+          allowedHeaders: ['*'],
+          maxAge: 3000,
+        },
+      ],
+    });
+
+    // Apply resource-specific tags to artifacts bucket
+    tagManager.applyTags(artifactsBucket, {
+      BucketPurpose: 'Artifacts',
+      DataClassification: 'Internal',
+      BackupPolicy: 'Daily', // Based on versioning with 30-day retention
+    });
+
+    // Audit logs bucket for compliance and security
+    const auditLogsBucket = new s3.Bucket(this, 'AuditLogsBucket', {
+      bucketName: `ai-agent-audit-logs-${stage}-${this.account}`,
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: this.kmsKey,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      objectLockEnabled: true,
+      objectLockDefaultRetention: s3.ObjectLockRetention.compliance(
+        cdk.Duration.days(2555) // 7 years
+      ),
+      lifecycleRules: [
+        {
+          id: 'TransitionAuditLogs',
+          enabled: true,
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
+              transitionAfter: cdk.Duration.days(90),
+            },
+            {
+              storageClass: s3.StorageClass.GLACIER,
+              transitionAfter: cdk.Duration.days(365),
+            },
+            {
+              storageClass: s3.StorageClass.DEEP_ARCHIVE,
+              transitionAfter: cdk.Duration.days(2555), // 7 years
+            },
+          ],
+        },
+      ],
+    });
+
+    // Apply resource-specific tags to audit logs bucket
+    tagManager.applyTags(auditLogsBucket, {
+      BucketPurpose: 'AuditLogs',
+      DataClassification: 'Confidential',
+      BackupPolicy: 'Daily', // Based on versioning and 7-year retention
+      ComplianceScope: stage === 'production' ? 'HIPAA,SOC2,GDPR' : 'SOC2',
+    });
+
+    // Add basic bucket policies (tag-based access control will be added after IAM roles are created)
+    this.configureBucketPolicies(documentsBucket, artifactsBucket, auditLogsBucket, false);
+    
+    return { documentsBucket, artifactsBucket, auditLogsBucket };
+  }
+
+  private configureBucketPolicies(
+    documentsBucket: s3.Bucket,
+    artifactsBucket: s3.Bucket,
+    auditLogsBucket: s3.Bucket,
+    includeTagBasedAccess: boolean = true
+  ): void {
+    // Deny insecure connections to all buckets
+    const denyInsecureConnections = new iam.PolicyStatement({
+      sid: 'DenyInsecureConnections',
+      effect: iam.Effect.DENY,
+      principals: [new iam.AnyPrincipal()],
+      actions: ['s3:*'],
+      resources: [
+        documentsBucket.bucketArn,
+        `${documentsBucket.bucketArn}/*`,
+        artifactsBucket.bucketArn,
+        `${artifactsBucket.bucketArn}/*`,
+        auditLogsBucket.bucketArn,
+        `${auditLogsBucket.bucketArn}/*`,
+      ],
+      conditions: {
+        Bool: {
+          'aws:SecureTransport': 'false',
+        },
+      },
+    });
+
+    documentsBucket.addToResourcePolicy(denyInsecureConnections);
+    artifactsBucket.addToResourcePolicy(denyInsecureConnections);
+    auditLogsBucket.addToResourcePolicy(denyInsecureConnections);
+
+    // Restrict audit logs bucket to prevent deletion
+    const preventAuditLogDeletion = new iam.PolicyStatement({
+      sid: 'PreventAuditLogDeletion',
+      effect: iam.Effect.DENY,
+      principals: [new iam.AnyPrincipal()],
+      actions: [
+        's3:DeleteObject',
+        's3:DeleteObjectVersion',
+        's3:PutLifecycleConfiguration',
+      ],
+      resources: [
+        auditLogsBucket.bucketArn,
+        `${auditLogsBucket.bucketArn}/*`,
+      ],
+      conditions: {
+        StringNotEquals: {
+          'aws:PrincipalServiceName': 's3.amazonaws.com',
+        },
+      },
+    });
+
+    auditLogsBucket.addToResourcePolicy(preventAuditLogDeletion);
+  }
+
+  /**
+   * Apply tag-based access control policies to S3 buckets
+   * This method is called after IAM roles are created
+   */
+  private applyTagBasedAccessControl(): void {
+    // Add tag-based access control policies for documents bucket
+    // Allow access to Internal classified data for authenticated users
+    this.documentsBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'AllowTagBasedAccessInternal',
+        effect: iam.Effect.ALLOW,
+        principals: [new iam.ArnPrincipal(this.iamRoles.lambdaExecutionRole.roleArn)],
+        actions: ['s3:GetObject', 's3:PutObject'],
+        resources: [`${this.documentsBucket.bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            's3:ExistingObjectTag/DataClassification': 'Internal',
+          },
+        },
+      })
+    );
+
+    // Add tag-based access control policies for artifacts bucket
+    this.artifactsBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'AllowTagBasedAccessInternal',
+        effect: iam.Effect.ALLOW,
+        principals: [new iam.ArnPrincipal(this.iamRoles.lambdaExecutionRole.roleArn)],
+        actions: ['s3:GetObject', 's3:PutObject'],
+        resources: [`${this.artifactsBucket.bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            's3:ExistingObjectTag/DataClassification': 'Internal',
+          },
+        },
+      })
+    );
+
+    // Add tag-based access control policies for audit logs bucket
+    // Restrict access to Confidential data - read-only for Lambda execution role
+    this.auditLogsBucket.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'AllowTagBasedAccessConfidential',
+        effect: iam.Effect.ALLOW,
+        principals: [new iam.ArnPrincipal(this.iamRoles.lambdaExecutionRole.roleArn)],
+        actions: ['s3:GetObject'],
+        resources: [`${this.auditLogsBucket.bucketArn}/*`],
+        conditions: {
+          StringEquals: {
+            's3:ExistingObjectTag/DataClassification': 'Confidential',
+          },
+        },
+      })
+    );
+  }
+
+  private createSecurityGroups(): {
+    lambdaSecurityGroup: ec2.SecurityGroup;
+    ecsSecurityGroup: ec2.SecurityGroup;
+  } {
+    // Initialize TagManager for applying resource-specific tags
+    const tagConfig = getTagConfig(this.node.tryGetContext('stage') || 'dev');
+    const tagManager = new TagManager(tagConfig, this.node.tryGetContext('stage') || 'dev');
+
+    // Security group for Lambda functions
+    const lambdaSecurityGroup = new ec2.SecurityGroup(
+      this,
+      'LambdaSecurityGroup',
+      {
+        vpc: this.vpc,
+        description: 'Security group for Lambda functions',
+        allowAllOutbound: true,
+      }
+    );
+    tagManager.applyTags(lambdaSecurityGroup, {
+      Component: 'Network-VPC',
+      SecurityGroupPurpose: 'Lambda',
+    });
+
+    // Security group for ECS tasks
+    const ecsSecurityGroup = new ec2.SecurityGroup(this, 'EcsSecurityGroup', {
+      vpc: this.vpc,
+      description: 'Security group for ECS tasks',
+      allowAllOutbound: true,
+    });
+    tagManager.applyTags(ecsSecurityGroup, {
+      Component: 'Network-VPC',
+      SecurityGroupPurpose: 'ECS',
+    });
+
+    // Security group for VPC endpoints
+    const vpcEndpointSecurityGroup = new ec2.SecurityGroup(
+      this,
+      'VpcEndpointSecurityGroup',
+      {
+        vpc: this.vpc,
+        description: 'Security group for VPC endpoints',
+        allowAllOutbound: false,
+      }
+    );
+    tagManager.applyTags(vpcEndpointSecurityGroup, {
+      Component: 'Network-VPC',
+      SecurityGroupPurpose: 'VPCEndpoints',
+    });
+
+    // Allow HTTPS traffic from Lambda and ECS to VPC endpoints
+    vpcEndpointSecurityGroup.addIngressRule(
+      lambdaSecurityGroup,
+      ec2.Port.tcp(443),
+      'Allow Lambda functions to access VPC endpoints'
+    );
+
+    vpcEndpointSecurityGroup.addIngressRule(
+      ecsSecurityGroup,
+      ec2.Port.tcp(443),
+      'Allow ECS tasks to access VPC endpoints'
+    );
 
     return { lambdaSecurityGroup, ecsSecurityGroup };
   }

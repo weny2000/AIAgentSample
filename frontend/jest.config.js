@@ -10,7 +10,7 @@ export default {
     '^.+\\.tsx?$': 'ts-jest',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@aws-sdk|amazon-cognito-identity-js|jwt-decode)/)',
+    'node_modules/(?!(@aws-sdk|amazon-cognito-identity-js|jwt-decode|@testing-library)/)',
   ],
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.(ts|tsx)',

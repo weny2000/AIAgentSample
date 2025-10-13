@@ -1,1 +1,3 @@
+@echo off
+echo Running infrastructure deployment with tag validation...
 bash "scripts/deploy-infrastructure.sh" %*
