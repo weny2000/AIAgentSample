@@ -20,10 +20,12 @@ export const authConfig: NextAuthOptions = {
       // Hosted UIを強制的に使用
       authorization: {
         params: {
-          scope: 'email openid profile',
+          scope: 'openid email',
           response_type: 'code',
         },
       },
+      // NextAuthのサインインページをスキップしてCognitoに直接リダイレクト
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
   session: {
@@ -63,6 +65,14 @@ export const authConfig: NextAuthOptions = {
       }
       // token.cognitoSub はサーバー側でのみ使用し、クライアントには送信しない
       return session;
+    },
+
+    async redirect({ url, baseUrl }) {
+      // サインイン後のリダイレクト先を制御
+      if (url.startsWith('/')) return `${baseUrl}${url}`;
+      else if (new URL(url).origin === baseUrl) return url;
+      // デフォルトでチャットページにリダイレクト
+      return `${baseUrl}/chat`;
     },
   },
 };
