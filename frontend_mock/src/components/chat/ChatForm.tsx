@@ -63,7 +63,11 @@ export function ChatForm({
         },
       };
 
-      const response = await fetch('/api/openai', {
+      // Use environment variable to determine which API endpoint to call
+      const chatApi = process.env.NEXT_PUBLIC_CHAT_API || 'strands';
+      const apiEndpoint = chatApi === 'strands' ? '/api/strands' : '/api/openai';
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

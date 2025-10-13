@@ -1,0 +1,23 @@
+[
+  {
+    "title": "LLM Best Practices at Company X",
+    "snippet": "Authored by Alice Tanaka (R&D) and Bob Suzuki (Platform). Covers deployment, governance, and evaluation.",
+    "authors": ["Alice Tanaka", "Bob Suzuki"],
+    "department": "R&D",
+    "tags": ["LLM", "governance", "deployment"]
+  },
+  {
+    "title": "Platform Team Guide to AWS Bedrock",
+    "snippet": "Bob Suzuki details secure patterns for Bedrock and model selection.",
+    "authors": ["Bob Suzuki"],
+    "department": "Platform",
+    "tags": ["AWS", "Bedrock", "security"]
+  },
+  {
+    "title": "Frontend and LLM UX Patterns",
+    "snippet": "Carol Watanabe documents Next.js + LLM UX strategies and prompt design.",
+    "authors": ["Carol Watanabe"],
+    "department": "Frontend",
+    "tags": ["Next.js", "UX", "prompting"]
+  }
+]

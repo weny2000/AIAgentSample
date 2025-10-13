@@ -1,0 +1,132 @@
+sources:
+  - id: doc-001
+    title: "Building Scalable APIs with FastAPI"
+    authors: ["Alice Tanaka", "Bob Suzuki"]
+    type: "Technical Document"
+    location: "Confluence: /display/ENG/FastAPI+Best+Practices"
+    summary: "A comprehensive guide on designing and implementing scalable and maintainable APIs using the FastAPI framework. Covers topics like dependency injection, async operations, and data validation."
+    keywords:
+      - "FastAPI"
+      - "API Design"
+      - "Python"
+      - "Scalability"
+
+  - id: doc-002
+    title: "Introduction to Amazon Bedrock"
+    authors: ["Bob Suzuki", "Alice Tanaka"]
+    type: "Wiki"
+    location: "Internal Wiki: /pages/aws/bedrock-intro"
+    summary: "An introductory document explaining the core concepts of Amazon Bedrock, how to use different foundation models, and examples for setting up a basic generative AI application."
+    keywords:
+      - "AWS"
+      - "Bedrock"
+      - "Generative AI"
+      - "LLM"
+
+  - id: slack-001
+    title: "Discussion on Next.js 14 Performance"
+    authors: ["Carol Watanabe", "Alice Tanaka"]
+    type: "Slack Message"
+    location: "Slack: #frontend-dev/p1678886400"
+    summary: "A thread discussing the performance improvements in Next.js 14, particularly around server components and caching strategies. Shared links to official documentation and benchmarks."
+    keywords:
+      - "Next.js"
+      - "Frontend"
+      - "Performance"
+      - "Server Components"
+
+  - id: doc-003
+    title: "DevOps CI/CD Pipeline Automation"
+    authors: ["Bob Suzuki", "David Ito"]
+    type: "Technical Document"
+    location: "GitRepo: /docs/cicd-automation.md"
+    summary: "Documentation detailing the setup and configuration of our automated CI/CD pipeline using Jenkins, Docker, and Kubernetes. Includes troubleshooting tips."
+    keywords:
+      - "DevOps"
+      - "CI/CD"
+      - "Jenkins"
+      - "Kubernetes"
+
+  - id: email-001
+    title: "Q3 Frontend Development Roadmap"
+    authors: ["Carol Watanabe"]
+    type: "Email"
+    location: "Email Archive: ID-98765"
+    summary: "An email outlining the strategic goals and key projects for the frontend team in Q3, including the migration to a new design system and improving accessibility."
+    keywords:
+      - "Roadmap"
+      - "Frontend"
+      - "Planning"
+      - "Design System"
+
+  - id: doc-004
+    title: "Advanced Prompt Engineering Techniques"
+    authors: ["Alice Tanaka", "Emily Sato"]
+    type: "Research Paper"
+    location: "ArXiv:2305.12345"
+    summary: "A paper exploring advanced techniques for prompt engineering, including chain-of-thought, self-consistency, and generated knowledge prompting to improve LLM reasoning."
+    keywords:
+      - "Prompting"
+      - "LLM"
+      - "AI"
+      - "NLP"
+
+  - id: doc-005
+    title: "UX Design Principles for Enterprise Applications"
+    authors: ["Carol Watanabe", "Bob Suzuki"]
+    type: "Wiki"
+    location: "Internal Wiki: /pages/ux/enterprise-design-principles"
+    summary: "A guide to user experience (UX) design principles tailored for complex enterprise-level applications. Focuses on information architecture, usability, and user-centric design."
+    keywords:
+      - "UX"
+      - "Design"
+      - "Enterprise Software"
+      - "Usability"
+
+  - id: doc-006
+    title: "Cost Optimization Strategies for AWS"
+    authors: ["Bob Suzuki"]
+    type: "Presentation"
+    location: "Shared Drive: /presentations/AWS_Cost_Optimization.pptx"
+    summary: "A presentation on strategies to reduce AWS cloud spending, covering EC2 instance types, S3 storage classes, and leveraging AWS Cost Explorer for analysis."
+    keywords:
+      - "AWS"
+      - "Cost Optimization"
+      - "Cloud"
+      - "FinOps"
+
+  - id: slack-002
+    title: "Security Alert: Log4j Vulnerability"
+    authors: ["David Ito"]
+    type: "Slack Message"
+    location: "Slack: #security-alerts/p1639132800"
+    summary: "An urgent security alert regarding the Log4j vulnerability (CVE-2021-44228). Instructions for identifying and patching affected systems."
+    keywords:
+      - "Security"
+      - "Vulnerability"
+      - "Log4j"
+      - "Patching"
+
+  - id: doc-007
+    title: "Onboarding Guide for New R&D Engineers"
+    authors: ["Alice Tanaka"]
+    type: "Technical Document"
+    location: "Confluence: /display/ENG/R&D+Onboarding"
+    summary: "A comprehensive onboarding guide for new engineers joining the R&D department. Covers development environment setup, coding standards, and key project overviews."
+    keywords:
+      - "Onboarding"
+      - "R&D"
+      - "Development"
+      - "Documentation"
+
+  - id: doc-008
+    title: "Microservices vs. Monolith Architecture"
+    authors: ["Emily Sato"]
+    type: "Blog Post"
+    location: "Engineering Blog: /posts/microservices-vs-monolith"
+    summary: "A blog post comparing and contrasting microservices and monolithic architectural patterns. Discusses the pros and cons of each approach with real-world examples."
+    keywords:
+      - "Microservices"
+      - "Architecture"
+      - "System Design"
+      - "Monolith"

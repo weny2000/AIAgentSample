@@ -1,0 +1,4 @@
+bedrock-agentcore
+bedrock-agentcore-starter-toolkit
+strands-agents
+# Reuse existing dependencies from service/requirements.txt as needed; optional duplication avoided.

@@ -30,7 +30,7 @@ export default function Home() {
             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
               <Bot className="h-4 w-4 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold">Project AI Assistant</h1>
+            <h1 className="text-xl font-bold">TacitAi(タシタイ)</h1>
           </div>
           <AuthStatus />
         </div>
@@ -42,7 +42,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                プロジェクトリーダーの
+                TacitAi(タシタイ)で
                 <br />
                 AI パートナー
               </h1>
@@ -123,7 +123,7 @@ export default function Home() {
               プロジェクト成功のための活用シーン
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              リーダー視点での具体的なアドバイスで、あらゆるプロジェクト課題を解決します。
+              様々な職種・業務でTacitAi(タシタイ)をご活用いただけます。
             </p>
           </div>
 
@@ -221,8 +221,7 @@ export default function Home() {
               プロジェクトを成功に導きましょう
             </h2>
             <p className="text-muted-foreground text-lg">
-              経験豊富なプロジェクトマネージャーの知見を活用して、
-              より良い意思決定とチーム運営を実現してください。
+              無料でTacitAi(タシタイ)を体験し、あなたの業務効率を向上させてください。
             </p>
             <AuthChatButton className="gap-2 text-lg px-8 py-6" />
           </div>
@@ -232,7 +231,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-muted/20 py-8 mt-16">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 Project AI Assistant. All rights reserved.</p>
+          <p>&copy; 2024 TacitAi(タシタイ). All rights reserved.</p>
         </div>
       </footer>
     </div>

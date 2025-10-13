@@ -1,0 +1,52 @@
+people:
+  - name: Alice Tanaka
+    department: R&D
+    preferred_contact: email:alice.tanaka@example.com
+    contacts:
+      - email: alice.tanaka@example.com
+      - slack: "@alice_t"
+    influences:
+      - name: Bob Suzuki
+        weight: 0.8
+      - name: Carol Watanabe
+        weight: 0.6
+    languages:
+      - English
+    expertise:
+      - LLM
+      - Next.js
+      - FastAPI
+
+  - name: Bob Suzuki
+    department: Platform
+    preferred_contact: slack:@bob_s
+    contacts:
+      - email: bob.suzuki@example.com
+      - slack: "@bob_s"
+    influences:
+      - name: Alice Tanaka
+        weight: 0.5
+    languages:
+      - Japanese
+    expertise:
+      - AWS
+      - Bedrock
+      - DevOps
+
+  - name: Carol Watanabe
+    department: Frontend
+    preferred_contact: email:carol.w@example.com
+    contacts:
+      - email: carol.w@example.com
+      - teams: carol.w
+    influences:
+      - name: Alice Tanaka
+        weight: 0.4
+      - name: Bob Suzuki
+        weight: 0.3
+    languages:
+      - English
+    expertise:
+      - Next.js
+      - UX
+      - Prompting
