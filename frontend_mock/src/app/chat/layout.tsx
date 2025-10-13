@@ -6,7 +6,8 @@ import { ChatHistorySideBar } from '@/components/chat/ChatHistorySideBar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function ChatLayout({
   children,
@@ -14,6 +15,8 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { status } = useSession();
   const [chatHistories, setChatHistories] = useState<
     ChatHistorySummaryObject[]
   >([]);
@@ -23,7 +26,18 @@ export default function ChatLayout({
   // 現在のチャットIDを取得
   const currentChatId = pathname.split('/')[2] || null;
 
-  // チャット履歴一覧の取得（一度だけ実行）
+  // 認証チェック - レイアウトレベルで全チャット関連ページを保護
+  useEffect(() => {
+    if (status === 'loading') return; // セッションロード中は待機
+
+    if (status === 'unauthenticated') {
+      // 未認証の場合はホームページにリダイレクト
+      router.push('/');
+      return;
+    }
+  }, [status, router]);
+
+  // チャット履歴一覧の取得（認証済みの場合のみ実行）
   useEffect(() => {
     const fetchChatHistories = async () => {
       try {
@@ -43,13 +57,21 @@ export default function ChatLayout({
       }
     };
 
-    fetchChatHistories();
-  }, []);
+    // 認証済みの場合のみチャット履歴を取得
+    if (status === 'authenticated') {
+      fetchChatHistories();
+    }
+  }, [status]);
 
   // サイドバートグル
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  // 認証チェック中または未認証の場合は何も表示しない
+  if (status === 'loading' || status === 'unauthenticated') {
+    return null;
+  }
 
   return (
     <SidebarProvider>

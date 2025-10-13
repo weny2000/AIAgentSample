@@ -8,7 +8,7 @@ import {
 } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Send, Loader2, Briefcase } from 'lucide-react';
 import { useState } from 'react';
@@ -32,8 +32,6 @@ export function ChatForm({
     userRole: '',
     userSkills: '',
   });
-  
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +93,10 @@ export function ChatForm({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
-      handleSubmit(e as any);
+      const syntheticEvent = {
+        preventDefault: () => {},
+      } as React.FormEvent;
+      handleSubmit(syntheticEvent);
     }
   };
 
@@ -104,8 +105,6 @@ export function ChatForm({
   const handleFormDataChange = (newFormData: InputPromptObject) => {
     setFormData(newFormData);
   };
-
-
 
   return (
     <div className="w-full bg-background border rounded-lg p-4">
@@ -121,7 +120,7 @@ export function ChatForm({
               プロフィール設定
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="chat" className="space-y-3 mt-4">
             {/* メインプロンプト入力エリア */}
             <div className="relative">
@@ -137,7 +136,7 @@ export function ChatForm({
                 rows={5}
                 disabled={isSubmitting}
               />
-              
+
               {/* 送信ボタン - テキストエリア内の右下に配置 */}
               <Button
                 type="submit"
@@ -156,21 +155,25 @@ export function ChatForm({
             {/* 現在のプロフィール設定の概要表示 */}
             {(formData.userRole || formData.userSkills) && (
               <div className="p-3 bg-muted/50 rounded-md border">
-                <h4 className="text-sm font-medium mb-2">現在のプロフィール設定:</h4>
+                <h4 className="text-sm font-medium mb-2">
+                  現在のプロフィール設定:
+                </h4>
                 {formData.userRole && (
                   <p className="text-sm text-muted-foreground">
-                    <span className="font-medium">役割:</span> {formData.userRole}
+                    <span className="font-medium">役割:</span>{' '}
+                    {formData.userRole}
                   </p>
                 )}
                 {formData.userSkills && (
                   <p className="text-sm text-muted-foreground mt-1">
-                    <span className="font-medium">スキル:</span> {formData.userSkills}
+                    <span className="font-medium">スキル:</span>{' '}
+                    {formData.userSkills}
                   </p>
                 )}
               </div>
             )}
           </TabsContent>
-          
+
           <TabsContent value="profile" className="mt-4">
             {/* ChatFormUserProfileコンポーネントを使用 */}
             <ChatFormUserProfile

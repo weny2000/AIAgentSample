@@ -1,7 +1,7 @@
 'use client';
 
 import { InputPromptObject, UserProfileObject } from '@/lib/types';
-import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -48,9 +48,7 @@ export function ChatFormUserProfile({
     <div className="space-y-4">
       {/* プリセットプロフィール */}
       <div className="space-y-2">
-        <label className="text-sm font-medium">
-          プリセットプロフィール
-        </label>
+        <label className="text-sm font-medium">プリセットプロフィール</label>
         <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
           {presetProfiles.map((profile, index) => (
             <Badge
@@ -106,7 +104,7 @@ export function ChatFormUserProfile({
           )}
           {formData.userSkills && (
             <p className="text-sm text-muted-foreground mt-1">
-              <span className="font-medium">スキル:</span>{' '}
+              <span className="font-medium">スキル:</span>
               {formData.userSkills}
             </p>
           )}
