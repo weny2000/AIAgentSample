@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+pydantic
+strands-agents
+strands-agents[openai] @ git+https://github.com/strands-agents/sdk-python.git@main
+strands-agents-tools
+boto3
+botocore
+ollama
+python-dotenv
+pyyaml
+numpy
+
+scikit-learn
+sentence-transformers
+torch
+httpx

@@ -1,0 +1,155 @@
+# Tacit knowledge corpus for keyword and semantic search
+# This file mirrors the schema used by data_source.yaml so it can be
+# ingested by the same loaders if needed. The InfoFinder currently
+# reads strands_agents/data/data_source.yaml, but these entries can be
+# merged or loaded by pointing the service to this file.
+#
+# Search relies mainly on:
+# - id (unique)
+# - title (embedded with summary for semantic search)
+# - summary (embedded with title for semantic search)
+# - keywords (used for keyword search)
+#
+# Optional fields like authors, type, location, and related_to provide context.
+
+sources:
+  - id: tacit-001
+    title: "REST API Naming and Versioning Rules"
+    authors: ["Engineering Guild"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: ENG/API-NAMING"
+    summary: "Use resource-oriented, plural nouns (e.g., /users), HTTP methods for actions, and semantic versioning via URL prefix (/v1) only when breaking changes occur. Prefer standard HTTP status codes and consistent error shapes with problem+json. Keep OpenAPI definitions as the source of truth."
+    keywords:
+      - "API Design"
+      - "REST"
+      - "FastAPI"
+      - "Versioning"
+      - "OpenAPI"
+      - "Consistency"
+    related_to: ["doc-001"]
+
+  - id: tacit-002
+    title: "Pydantic Models and Validation Conventions"
+    authors: ["Python Chapter"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: ENG/PYDANTIC-GUIDE"
+    summary: "Model classes use PascalCase; fields use snake_case. Favor type hints and strict types; avoid optional defaults unless required. Centralize validators; use field constraints and Annotated for semantic types. Surface user-friendly validation messages and keep request/response DTOs separate from domain models."
+    keywords:
+      - "Python"
+      - "Pydantic"
+      - "Data Validation"
+      - "FastAPI"
+      - "DTO"
+    related_to: ["doc-001"]
+
+  - id: tacit-003
+    title: "Async I/O and Performance in FastAPI"
+    authors: ["Platform Team"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: ENG/ASYNC-IO"
+    summary: "Prefer async def endpoints for I/O-bound work. Use non-blocking clients (httpx, asyncpg). Offload CPU-heavy tasks to background workers or thread executors. Set connection timeouts, enable dependency injection for resources, and avoid global event loops. Profile with uvloop and limit max concurrency where appropriate."
+    keywords:
+      - "FastAPI"
+      - "Async"
+      - "Performance"
+      - "httpx"
+      - "Dependency Injection"
+    related_to: ["doc-001"]
+
+  - id: tacit-004
+    title: "Next.js 14 Server Components and Caching Policy"
+    authors: ["Frontend Guild"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: FE/NEXT-CACHING"
+    summary: "Default to Server Components for data-heavy views. Use fetch caching with revalidate for stable data, and cache: 'no-store' for user-specific content. Memoize expensive selectors, minimize client bundles, and define stable RSC boundaries. Validate performance budgets on PR with Lighthouse CI."
+    keywords:
+      - "Next.js"
+      - "Frontend"
+      - "Performance"
+      - "Server Components"
+      - "Caching"
+    related_to: ["slack-001"]
+
+  - id: tacit-005
+    title: "CI/CD Quality Gates and Branching"
+    authors: ["DevOps Chapter"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: ENG/CI-CD-RULES"
+    summary: "All PRs require successful lint, tests, SBOM generation, and SAST checks. Minimum 80% line coverage for core modules. Use Conventional Commits and feature/*, fix/* branching. Require two approvals for sensitive areas. Block direct pushes to main; enforce protected environments with manual promotion."
+    keywords:
+      - "DevOps"
+      - "CI/CD"
+      - "Jenkins"
+      - "Quality Gates"
+      - "Conventional Commits"
+    related_to: ["doc-003"]
+
+  - id: tacit-006
+    title: "Kubernetes Deployment Hardening"
+    authors: ["Platform Team"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: OPS/K8S-HARDENING"
+    summary: "Set resource requests/limits, add liveness/readiness probes, and run as non-root with read-only filesystem where possible. Use unique namespaces per environment, pin minimal base images, and enable network policies. Labels and annotations must include app, version, owner, and environment."
+    keywords:
+      - "Kubernetes"
+      - "Security"
+      - "Operational Excellence"
+      - "Probes"
+      - "Resource Limits"
+    related_to: ["doc-003"]
+
+  - id: tacit-007
+    title: "AWS Cost Optimization Guardrails"
+    authors: ["Cloud FinOps"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: CLOUD/FINOPS-GUARDRAILS"
+    summary: "Enforce mandatory tags (owner, cost_center, environment). Right-size EC2 with scheduled shutdown for non-prod. Prefer gp3 EBS, use S3 lifecycle transitions and intelligent-tiering for large objects. Configure Savings Plans where steady state exists and review Cost Explorer monthly with alerts."
+    keywords:
+      - "AWS"
+      - "Cost Optimization"
+      - "FinOps"
+      - "Cloud"
+      - "S3"
+    related_to: ["doc-006"]
+
+  - id: tacit-008
+    title: "Security Baseline: Secrets, Dependencies, and Patch Windows"
+    authors: ["Security Team"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: SEC/BASELINE"
+    summary: "Never commit secrets; use AWS Secrets Manager or SSM Parameter Store. Rotate credentials every 90 days. Enforce dependency scanning (e.g., for Log4j classpaths) and SBOM publishing in CI. Patch critical CVEs within 48 hours and high within 7 days. Enable audit logging and least-privilege IAM."
+    keywords:
+      - "Security"
+      - "Secrets Management"
+      - "Vulnerability"
+      - "Log4j"
+      - "IAM"
+    related_to: ["slack-002"]
+
+  - id: tacit-009
+    title: "Enterprise UX Accessibility and Design Tokens"
+    authors: ["Design Systems Team"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: UX/ACCESSIBILITY"
+    summary: "Meet WCAG 2.1 AA. Provide keyboard navigation, visible focus states, and sufficient color contrast. Centralize design tokens for spacing, color, and typography; avoid ad-hoc inline styles. Validate with automated a11y checks and manual screen reader testing before release."
+    keywords:
+      - "UX"
+      - "Accessibility"
+      - "Design System"
+      - "Enterprise Software"
+      - "Usability"
+    related_to: ["doc-005", "email-001"]
+
+  - id: tacit-010
+    title: "Bedrock and Prompt Engineering Guardrails"
+    authors: ["AI Working Group"]
+    type: "Tacit Knowledge"
+    location: "Internal Standard: AI/PROMPT-GUARDRAILS"
+    summary: "Select foundation models based on task fit and data sensitivity. Use system prompts to set scope and safety, prohibit PII extraction, and prefer RAG over long prompts. Avoid exposing chain-of-thought; log prompts/outputs with redaction. Maintain evaluation suites with self-consistency checks."
+    keywords:
+      - "Bedrock"
+      - "Prompting"
+      - "LLM"
+      - "AI Safety"
+      - "RAG"
+    related_to: ["doc-002", "doc-004"]

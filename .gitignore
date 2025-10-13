@@ -117,3 +117,7 @@ cdk.context.json
 # Infrastructure
 *.tfvars
 *.tfvars.json
+
+# Python
+__pycache__/
+*.py[cod]

@@ -23,7 +23,7 @@ export default function Home() {
             <div className="h-8 w-8 bg-primary rounded-lg flex items-center justify-center">
               <Bot className="h-4 w-4 text-primary-foreground" />
             </div>
-            <h1 className="text-xl font-bold">AI Assistant</h1>
+            <h1 className="text-xl font-bold">TacitAi(タシタイ)</h1>
           </div>
           <Badge variant="secondary" className="hidden sm:flex">
             Beta Version
@@ -37,7 +37,7 @@ export default function Home() {
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-4">
               <h1 className="text-4xl md:text-6xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                AI アシスタントで
+                TacitAi(タシタイ)で
                 <br />
                 業務効率を革新する
               </h1>
@@ -67,7 +67,7 @@ export default function Home() {
         <section className="py-16">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">
-              なぜAI Assistantを選ぶのか
+              なぜTacitAi(タシタイ)を選ぶのか
             </h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
               従来のAIチャットボットとは異なる、あなた専用にカスタマイズされた体験をお届けします。
@@ -121,7 +121,7 @@ export default function Home() {
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold mb-4">活用シーン</h2>
             <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-              様々な職種・業務でAI Assistantをご活用いただけます。
+              様々な職種・業務でTacitAi(タシタイ)をご活用いただけます。
             </p>
           </div>
 
@@ -223,7 +223,7 @@ export default function Home() {
           <div className="max-w-2xl mx-auto space-y-6">
             <h2 className="text-3xl font-bold">今すぐ始めましょう</h2>
             <p className="text-muted-foreground text-lg">
-              無料でAI Assistantを体験し、あなたの業務効率を向上させてください。
+              無料でTacitAi(タシタイ)を体験し、あなたの業務効率を向上させてください。
             </p>
             <Link href="/chat">
               <Button size="lg" className="gap-2 text-lg px-8 py-6">
@@ -239,7 +239,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="border-t bg-muted/20 py-8 mt-16">
         <div className="container mx-auto px-4 text-center text-muted-foreground">
-          <p>&copy; 2024 AI Assistant. All rights reserved.</p>
+          <p>&copy; 2024 TacitAi(タシタイ). All rights reserved.</p>
         </div>
       </footer>
     </div>
