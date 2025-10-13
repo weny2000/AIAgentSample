@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { maskEmail } from '@/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,6 +32,7 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
 
 interface ChatHistorySideBarProps {
@@ -47,6 +49,7 @@ export function ChatHistorySideBar({
   isMobile = false,
 }: ChatHistorySideBarProps) {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleNewChat = () => {
     const newChatId = uuidv4();
@@ -93,6 +96,19 @@ export function ChatHistorySideBar({
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
+  // ユーザー表示情報を取得
+  const getUserDisplayName = () => {
+    return (
+      session?.user?.name || session?.user?.email?.split('@')[0] || 'ユーザー'
+    );
+  };
+
+  const getUserDisplayEmail = () => {
+    return session?.user?.email
+      ? maskEmail(session.user.email)
+      : 'メール未設定';
+  };
+
   // モバイル表示用のコンテンツ
   const sidebarContent = (
     <>
@@ -110,8 +126,10 @@ export function ChatHistorySideBar({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
-                <p className="text-sm font-medium">ユーザー</p>
-                <p className="text-xs text-muted-foreground">AI アシスタント</p>
+                <p className="text-sm font-medium">{getUserDisplayName()}</p>
+                <p className="text-xs text-muted-foreground">
+                  {getUserDisplayEmail()}
+                </p>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -215,9 +233,7 @@ export function ChatHistorySideBar({
   // モバイル表示の場合は単純なdivレイアウト、デスクトップは通常のSidebarコンポーネント
   if (isMobile) {
     return (
-      <div className="h-full flex flex-col bg-background">
-        {sidebarContent}
-      </div>
+      <div className="h-full flex flex-col bg-background">{sidebarContent}</div>
     );
   }
 
@@ -237,8 +253,10 @@ export function ChatHistorySideBar({
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-left">
-                <p className="text-sm font-medium">ユーザー</p>
-                <p className="text-xs text-muted-foreground">AI アシスタント</p>
+                <p className="text-sm font-medium">{getUserDisplayName()}</p>
+                <p className="text-xs text-muted-foreground">
+                  {getUserDisplayEmail()}
+                </p>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </Button>
