@@ -17,11 +17,12 @@ export const authConfig: NextAuthOptions = {
       clientId: cognitoClientId,
       clientSecret: cognitoClientSecret,
       issuer: cognitoIssuer,
-      // Hosted UIを強制的に使用
       authorization: {
         params: {
           scope: 'openid email',
           response_type: 'code',
+          lang: 'ja',
+          ui_locales: 'ja-JP',
         },
       },
       // NextAuthのサインインページをスキップしてCognitoに直接リダイレクト

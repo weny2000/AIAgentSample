@@ -32,8 +32,9 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
+import { useState } from 'react';
 
 interface ChatHistorySideBarProps {
   histories: ChatHistorySummaryObject[];
@@ -50,6 +51,7 @@ export function ChatHistorySideBar({
 }: ChatHistorySideBarProps) {
   const router = useRouter();
   const { data: session } = useSession();
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   const handleNewChat = () => {
     const newChatId = uuidv4();
@@ -67,9 +69,29 @@ export function ChatHistorySideBar({
     console.log('プロフィール編集が選択されました');
   };
 
-  const handleSignOut = () => {
-    // サインアウト機能（未実装）
-    console.log('サインアウトが選択されました');
+  const handleSignOut = async () => {
+    if (isSigningOut) return; // 重複実行を防止
+
+    const confirmed = window.confirm(
+      'サインアウトしますか？\n現在の作業が保存されていることを確認してください。'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setIsSigningOut(true);
+
+      // NextAuth.jsのsignOut関数を呼び出し
+      // callbackUrl: '/' でホームページにリダイレクト
+      await signOut({
+        callbackUrl: '/',
+        redirect: true, // 確実にリダイレクトを実行
+      });
+    } catch (error) {
+      console.error('サインアウトエラー:', error);
+      alert('サインアウト中にエラーが発生しました。再度お試しください。');
+      setIsSigningOut(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -119,6 +141,7 @@ export function ChatHistorySideBar({
             <Button
               variant="ghost"
               className="flex items-center gap-3 mb-4 w-full justify-start p-2 h-auto"
+              disabled={isSigningOut}
             >
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
@@ -140,9 +163,13 @@ export function ChatHistorySideBar({
               プロフィール編集
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="text-red-600"
+              disabled={isSigningOut}
+            >
               <LogOut className="mr-2 h-4 w-4" />
-              サインアウト
+              {isSigningOut ? 'サインアウト中...' : 'サインアウト'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -246,6 +273,7 @@ export function ChatHistorySideBar({
             <Button
               variant="ghost"
               className="flex items-center gap-3 mb-4 w-full justify-start p-2 h-auto"
+              disabled={isSigningOut}
             >
               <Avatar className="h-8 w-8">
                 <AvatarFallback>
@@ -267,9 +295,13 @@ export function ChatHistorySideBar({
               プロフィール編集
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-red-600">
+            <DropdownMenuItem
+              onClick={handleSignOut}
+              className="text-red-600"
+              disabled={isSigningOut}
+            >
               <LogOut className="mr-2 h-4 w-4" />
-              サインアウト
+              {isSigningOut ? 'サインアウト中...' : 'サインアウト'}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
