@@ -1,0 +1,33 @@
+# Exclude caches and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+pythonenv*/
+
+# Environment files (do not bake secrets into the image)
+.env
+.env.*
+config/.env
+
+# VCS
+.git
+.gitignore
+
+# OS / editor artifacts
+.DS_Store
+.vscode/
+.idea/
+
+# Logs and test outputs
+service/logs/
+test-results/
+
+# Node-related (if any accidentally in context)
+node_modules/

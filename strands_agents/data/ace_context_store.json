@@ -1,0 +1,55 @@
+{
+  "items": [
+    {
+      "type": "successful_pattern",
+      "pattern": {
+        "name": "role_based_context",
+        "description": "Tailor response for role: DevOps",
+        "condition": "profile.role == 'DevOps'"
+      },
+      "quality_score": 1.0,
+      "timestamp": "2025-10-15T11:07:20.398253"
+    },
+    {
+      "type": "successful_pattern",
+      "pattern": {
+        "name": "comprehensive_keywords",
+        "description": "Rich keyword extraction enables better search",
+        "condition": "keywords_count >= 5"
+      },
+      "quality_score": 1.0,
+      "timestamp": "2025-10-15T11:07:20.398258"
+    },
+    {
+      "type": "successful_pattern",
+      "pattern": {
+        "name": "role_based_context",
+        "description": "Tailor response for role: HR",
+        "condition": "profile.role == 'HR'"
+      },
+      "quality_score": 0.8500000000000001,
+      "timestamp": "2025-10-15T11:07:20.399181"
+    },
+    {
+      "type": "improvement_strategy",
+      "strategy": "Expand search coverage - consider broadening search criteria or using synonyms",
+      "timestamp": "2025-10-15T11:07:20.399184"
+    },
+    {
+      "type": "improvement_strategy",
+      "strategy": "Integrate tacit knowledge - ensure tacit knowledge is being searched and utilized",
+      "timestamp": "2025-10-15T11:07:20.399187"
+    },
+    {
+      "type": "successful_pattern",
+      "pattern": {
+        "name": "role_based_context",
+        "description": "Tailor response for role: Support Manager",
+        "condition": "profile.role == 'Support Manager'"
+      },
+      "quality_score": 1.0,
+      "timestamp": "2025-10-15T11:07:20.404333"
+    }
+  ],
+  "last_updated": "2025-10-15T11:07:20.407720"
+}
