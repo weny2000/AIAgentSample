@@ -18,8 +18,16 @@ This file intentionally keeps minimal dependencies and reuses existing initializ
 from __future__ import annotations
 
 import os
+import sys
 import logging
 from typing import Any, Dict
+
+# Add parent directory to path to enable imports when run directly
+_current_dir = os.path.dirname(os.path.abspath(__file__))
+_strands_agents_dir = os.path.dirname(_current_dir)
+_repo_root = os.path.dirname(_strands_agents_dir)
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
 
 from bedrock_agentcore import BedrockAgentCoreApp
 
