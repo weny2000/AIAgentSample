@@ -255,14 +255,14 @@ export async function GET(request: NextRequest) {
       console.error('Error reading summaries.json:', fileError);
     }
 
-    // 何も見つからない場合
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'No summary found for the specified parameters',
-      },
-      { status: 404 }
+    // 何も見つからない場合 - エラーではなく未作成として扱う
+    console.log(
+      `No summary found for ${chatId ? 'chatId' : 'userId'}: ${chatId || userId} - treating as not created`
     );
+    return NextResponse.json({
+      success: true,
+      data: null,
+    });
   } catch (error) {
     console.error('Error fetching summary:', error);
     return NextResponse.json(

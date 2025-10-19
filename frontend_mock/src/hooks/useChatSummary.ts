@@ -103,11 +103,18 @@ export function useChatSummary(
         }
       }
 
-      // 両方とも失敗した場合
-      throw new Error('Failed to load summaries from both sources');
+      // どちらからも取得できない場合、サマリーは未作成として扱う
+      console.log('No summary found - treating as not created yet');
+      setSummary(null);
     } catch (err) {
-      setError('Failed to load summaries');
-      console.error('Summary fetch error:', err);
+      // ネットワークエラーなど、実際のエラーが発生した場合のみエラーとして扱う
+      if (err instanceof TypeError && err.message.includes('fetch')) {
+        setError('ネットワークエラーが発生しました');
+      } else {
+        // その他のエラーもサマリー未作成として扱う
+        console.log('Error occurred, treating as no summary available:', err);
+        setSummary(null);
+      }
     } finally {
       setIsLoading(false);
     }

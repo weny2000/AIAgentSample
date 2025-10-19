@@ -100,7 +100,7 @@ export default function ChatSummaryDrawer({
           {/* サマリー表示 - スクロール可能 */}
           <Card className="mb-4">
             <CardHeader>
-              <CardTitle className="text-sm">Chat Summary</CardTitle>
+              <CardTitle className="text-sm">チャットの要約</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="h-80 overflow-hidden">
@@ -141,15 +141,6 @@ export default function ChatSummaryDrawer({
                       <div className="mb-2">
                         No summary available for this chat
                       </div>
-                      <div className="text-xs">
-                        Start a conversation to generate a summary!
-                      </div>
-                      {process.env.NODE_ENV === 'development' && (
-                        <div className="mt-2 text-xs text-blue-600">
-                          Debug: userId={userId}, chatId={chatId}, timestamp=
-                          {timestamp}
-                        </div>
-                      )}
                     </div>
                   )}
                 </ScrollArea>
@@ -160,7 +151,7 @@ export default function ChatSummaryDrawer({
           {/* ネットワーク図表示 - 固定高さ */}
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-sm">Network Graph</CardTitle>
+              <CardTitle className="text-sm">ネットワーク図</CardTitle>
               <Button
                 variant="outline"
                 size="sm"

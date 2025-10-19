@@ -32,10 +32,14 @@ export async function GET(request: NextRequest) {
       const summary = allSummaries.find(s => s.chatId === chatId);
 
       if (!summary) {
-        return NextResponse.json(
-          { success: false, error: 'Summary not found for this chat' },
-          { status: 404 }
+        // サマリーが見つからない場合は未作成として扱う
+        console.log(
+          `No summary found for chatId: ${chatId} - treating as not created`
         );
+        return NextResponse.json({
+          success: true,
+          data: null,
+        });
       }
 
       return NextResponse.json({
@@ -49,10 +53,14 @@ export async function GET(request: NextRequest) {
       );
 
       if (!summary) {
-        return NextResponse.json(
-          { success: false, error: 'Summary not found' },
-          { status: 404 }
+        // サマリーが見つからない場合は未作成として扱う
+        console.log(
+          `No summary found for userId: ${userId}, timestamp: ${timestamp} - treating as not created`
         );
+        return NextResponse.json({
+          success: true,
+          data: null,
+        });
       }
 
       return NextResponse.json({
