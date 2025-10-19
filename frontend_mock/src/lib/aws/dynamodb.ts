@@ -10,7 +10,6 @@ import {
   UpdateCommand,
   DeleteCommand,
   QueryCommand,
-  ScanCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { DYNAMODB_CONFIG, TABLE_NAMES } from './config';
 import { ChatSummary, UserProfile } from '../types';
