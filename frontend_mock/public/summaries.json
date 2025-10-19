@@ -1,30 +1,51 @@
 [
   {
     "userId": "user-1",
+    "chatId": "chat-001",
     "timestamp": "2025-01-19T10:00:00.000Z",
-    "title": "Next.jsプロジェクトの最適化について",
-    "summary": "【会話サマリー】\nユーザーがNext.jsアプリケーションのパフォーマンス最適化について質問。\n\n主なポイント:\n- バンドルサイズの削減方法\n- 画像最適化\n- SSRとSSGの使い分け\n- Core Web Vitalsの改善\n\nAIアシスタントが具体的な実装方法と最適化テクニックを提案しました。",
+    "title": "Reactを使った効率的なWebアプリ開発のコツ",
+    "summary": "【会話サマリー】\nReactを使った効率的なWebアプリ開発について詳しく議論されました。\n\n主なポイント:\n- コンポーネント設計の重要性（再利用可能性、単一責任）\n- カスタムフックの活用法と注意点\n- パフォーマンス最適化手法\n- TypeScript導入によるメリット\n- 開発環境の整備（ESLint、Prettier、Storybook）\n\nカスタムフック作成時の命名規則、依存関係管理、エラーハンドリングについても具体的なベストプラクティスが共有されました。",
     "networkGraph": "https://example.com/network/graph-1.html",
     "networkJson": "https://example.com/network/json-1.json",
-    "createdAt": "2025-01-19T10:00:00.000Z",
-    "updatedAt": "2025-01-19T10:15:00.000Z"
+    "createdAt": "2024-10-04T09:00:00.000Z",
+    "updatedAt": "2024-10-04T09:03:45.000Z"
   },
   {
     "userId": "user-1",
+    "chatId": "chat-002",
     "timestamp": "2025-01-18T14:30:00.000Z",
-    "title": "TypeScriptの型システム活用法",
-    "summary": "【会話サマリー】\nTypeScriptの高度な型システムについてのディスカッション。\n\n学習内容:\n- Conditional Types\n- Mapped Types\n- Template Literal Types\n- ユーティリティ型の活用\n\n実際のプロジェクトでの活用例とベストプラクティスを共有しました。",
-    "createdAt": "2025-01-18T14:30:00.000Z",
-    "updatedAt": "2025-01-18T14:45:00.000Z"
+    "title": "Next.jsでSEO対策をする方法",
+    "summary": "【会話サマリー】\nNext.jsを使用したSEO対策の包括的なガイドについて説明されました。\n\n学習内容:\n- Metadata APIを使用したメタタグ設定\n- サイトマップとrobot.txtの設定\n- パフォーマンス最適化（LCP、FID、CLS）\n- 構造化データとJSON-LD実装\n- Core Web Vitalsの改善手法\n\n技術的SEOから コンテンツSEOまで、検索エンジン最適化の全体戦略が詳しく解説されました。",
+    "createdAt": "2024-10-04T14:00:00.000Z",
+    "updatedAt": "2024-10-04T14:01:30.000Z"
   },
   {
     "userId": "user-1",
+    "chatId": "chat-003",
     "timestamp": "2025-01-17T16:20:00.000Z",
-    "title": "AWS Lambda関数の設計パターン",
-    "summary": "【会話サマリー】\nサーバーレスアーキテクチャにおけるLambda関数の設計について。\n\n検討した内容:\n- 関数の分割粒度\n- 環境変数管理\n- エラーハンドリング\n- 監視・ロギング戦略\n\nスケーラブルなサーバーレスアプリケーションの構築方針を決定しました。",
+    "title": "TypeScriptの型安全性を活用したAPIクライアント設計",
+    "summary": "【会話サマリー】\nTypeScriptを使用した型安全なAPIクライアントの設計方法について議論されました。\n\n検討した内容:\n- 基本的な型定義（ApiResponse、User型）\n- 型安全なAPIクライアントクラスの実装\n- エラーハンドリングとカスタムエラー型\n- zodを使用したランタイム検証\n- Type Guardsによる安全性確保\n\nコンパイル時とランタイムの両方で安全性を保証するAPIクライアント設計のベストプラクティスが提案されました。",
     "networkGraph": "https://example.com/network/graph-2.html",
     "networkJson": "https://example.com/network/json-2.json",
-    "createdAt": "2025-01-17T16:20:00.000Z",
-    "updatedAt": "2025-01-17T16:35:00.000Z"
+    "createdAt": "2024-10-03T16:30:00.000Z",
+    "updatedAt": "2024-10-03T16:32:15.000Z"
+  },
+  {
+    "userId": "user-1",
+    "chatId": "chat-004",
+    "timestamp": "2025-01-16T12:10:00.000Z",
+    "title": "モダンなUIコンポーネントライブラリの選択基準",
+    "summary": "【会話サマリー】\nモダンUIコンポーネントライブラリの選択基準について詳しく解説されました。\n\n主な選択基準:\n- TypeScriptサポートの充実度\n- カスタマイズ性（shadcn/ui、Chakra UI、Mantine）\n- パフォーマンス（Tree Shaking、バンドルサイズ）\n- デザインシステムとの適合性\n- 開発チームの学習コスト\n\n各ライブラリの特徴と適用場面について具体的な比較が行われ、プロジェクト要件に応じた選択指針が示されました。",
+    "createdAt": "2024-10-02T10:15:00.000Z",
+    "updatedAt": "2024-10-02T10:17:45.000Z"
+  },
+  {
+    "userId": "user-1",
+    "chatId": "chat-005",
+    "timestamp": "2025-01-15T08:30:00.000Z",
+    "title": "フロントエンドのパフォーマンス監視とデバッグ",
+    "summary": "【会話サマリー】\nフロントエンドパフォーマンス監視とデバッグのベストプラクティスについて包括的に説明されました。\n\n重要なポイント:\n- ブラウザ開発者ツールの活用法\n- 専用監視サービス（Sentry、DataDog、New Relic）\n- Core Web Vitals測定とカスタムメトリクス\n- React Developer Toolsでのデバッグ\n- パフォーマンス最適化手法\n\n継続的な監視とプロアクティブな最適化の重要性が強調され、実装例も含めて具体的な手法が紹介されました。",
+    "createdAt": "2024-10-01T13:45:00.000Z",
+    "updatedAt": "2024-10-01T13:48:30.000Z"
   }
 ]

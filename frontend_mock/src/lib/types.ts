@@ -87,6 +87,7 @@ export interface ChatResponseObject {
 // ChatSummary テーブルの型定義
 export interface ChatSummary {
   userId: string; // PK
+  chatId?: string; // チャットID
   timestamp: string; // SK (ISO 8601形式)
   title: string;
   summary: string;
@@ -113,11 +114,11 @@ export interface UserProfile {
 
 // サマリー関連
 export interface CreateSummaryRequest {
-  userId: string;
   chatId: string;
+  userId?: string;
   previousSummary?: string;
-  latestQuestion: string;
-  latestAnswer: string;
+  latestQuestion?: string;
+  latestAnswer?: string;
 }
 
 export interface CreateSummaryResponse {

@@ -6,6 +6,7 @@ import { ChatHistoryObject, ApiResponse } from '@/lib/types';
 import { ChatForm } from '@/components/chat/ChatForm';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import ChatSummaryDrawer from '@/components/chat/ChatSummaryDrawer';
+import { useChatSummary } from '@/hooks/useChatSummary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, PanelRight, PanelRightClose } from 'lucide-react';
@@ -23,6 +24,13 @@ export default function ChatDetailPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const [currentTimestamp, setCurrentTimestamp] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // サマリーフックを使用
+  const { generateSummary, isGenerating } = useChatSummary(
+    'user-1',
+    undefined,
+    chatId
+  );
 
   // 現在のチャット詳細の取得
   const fetchCurrentChat = async (id: string) => {
@@ -247,6 +255,10 @@ export default function ChatDetailPage() {
             <ChatForm
               chatId={chatId}
               onMessageSent={handleMessageSent}
+              onSummaryGenerated={async () => {
+                // サマリーを生成
+                await generateSummary(chatId);
+              }}
               isSubmitting={isSubmitting}
               setIsSubmitting={setIsSubmitting}
             />

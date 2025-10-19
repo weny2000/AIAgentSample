@@ -11,39 +11,100 @@ import {
   CreateSummaryResponse,
 } from '@/lib/types';
 
-export function useChatSummary(userId: string, timestamp?: string) {
+export function useChatSummary(
+  userId: string,
+  timestamp?: string,
+  chatId?: string
+) {
   const [summary, setSummary] = useState<ChatSummary | null>(null);
   const [summaries, setSummaries] = useState<ChatSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // サマリーデータを取得（JSONファイルから）
-  const fetchSummary = async (targetTimestamp?: string) => {
-    if (!userId) return;
+  // サマリーデータを取得（JSON API + LLM生成 API）
+  const fetchSummary = async (
+    targetTimestamp?: string,
+    targetChatId?: string,
+    forceRefresh?: boolean
+  ) => {
+    if (!userId && !targetChatId) return;
 
     try {
       setIsLoading(true);
       setError(null);
 
-      // サンプルデータからサマリーを読み込み
-      const response = await fetch('/summaries.json');
-      if (!response.ok) {
-        throw new Error('Failed to load summaries');
-      }
-
-      const data: ChatSummary[] = await response.json();
-
-      // 指定されたuserIdのサマリーのみフィルタリング
-      const userSummaries = data.filter(sum => sum.userId === userId);
-
-      if (targetTimestamp) {
-        const targetSummary = userSummaries.find(
-          sum => sum.timestamp === targetTimestamp
-        );
-        setSummary(targetSummary || null);
+      // まず生成されたサマリーから取得を試みる
+      let url: string;
+      if (targetChatId) {
+        // LLM生成APIから取得
+        url = `/api/chat/summary?chatId=${targetChatId}`;
+      } else if (targetTimestamp) {
+        url = `/api/db/chat/summary?userId=${userId}&timestamp=${targetTimestamp}`;
       } else {
-        setSummaries(userSummaries);
+        url = `/api/db/chat/summary?userId=${userId}`;
       }
+
+      const response = await fetch(url);
+      if (!response.ok && !targetChatId) {
+        throw new Error('Failed to load summaries from JSON');
+      }
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          const data: ChatSummary[] = Array.isArray(result.data)
+            ? result.data
+            : [result.data];
+
+          // 指定されたuserIdのサマリーのみフィルタリング（chatId検索の場合は不要）
+          const filteredSummaries = targetChatId
+            ? data
+            : data.filter(sum => sum.userId === userId);
+
+          if (targetTimestamp) {
+            const targetSummary = filteredSummaries.find(
+              sum => sum.timestamp === targetTimestamp
+            );
+            setSummary(targetSummary || null);
+          } else if (targetChatId) {
+            // chatIdで検索した場合は単一のサマリーを設定
+            setSummary(filteredSummaries[0] || null);
+          } else {
+            setSummaries(filteredSummaries);
+            // timestampが指定されていない場合は、最新のサマリーを表示
+            if (filteredSummaries.length > 0) {
+              const latestSummary = filteredSummaries.sort(
+                (a, b) =>
+                  new Date(b.updatedAt).getTime() -
+                  new Date(a.updatedAt).getTime()
+              )[0];
+              setSummary(latestSummary);
+            }
+          }
+          return; // 成功した場合は終了
+        }
+      }
+
+      // LLM生成APIで取得できない場合、JSONファイルにフォールバック
+      if (targetChatId) {
+        const fallbackUrl = `/api/db/chat/summary?chatId=${targetChatId}`;
+        const fallbackResponse = await fetch(fallbackUrl);
+
+        if (fallbackResponse.ok) {
+          const fallbackResult = await fallbackResponse.json();
+          if (fallbackResult.success) {
+            const data: ChatSummary[] = Array.isArray(fallbackResult.data)
+              ? fallbackResult.data
+              : [fallbackResult.data];
+            setSummary(data[0] || null);
+            return;
+          }
+        }
+      }
+
+      // 両方とも失敗した場合
+      throw new Error('Failed to load summaries from both sources');
     } catch (err) {
       setError('Failed to load summaries');
       console.error('Summary fetch error:', err);
@@ -63,7 +124,7 @@ export function useChatSummary(userId: string, timestamp?: string) {
 
       // 新しいサマリーを生成（実際にはサンプルの内容）
       const newSummary: ChatSummary = {
-        userId: summaryData.userId,
+        userId: summaryData.userId || '',
         timestamp,
         title: '新しいチャットサマリー',
         summary: `【会話サマリー】\n最新の質問: ${summaryData.latestQuestion}\n\n対話の概要:\n- 新しい議論が開始されました\n- 重要なポイントが共有されました\n- 次のステップが決定されました`,
@@ -89,22 +150,64 @@ export function useChatSummary(userId: string, timestamp?: string) {
     await fetchSummary();
   };
 
+  // 新しいサマリーを生成（LLM使用）
+  const generateSummary = async (targetChatId: string) => {
+    try {
+      setIsGenerating(true);
+      setError(null);
+
+      console.log('Generating new summary for chatId:', targetChatId);
+
+      const response = await fetch('/api/chat/summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ chatId: targetChatId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate summary');
+      }
+
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        setSummary(result.data);
+        console.log('Summary generated successfully');
+        return result.data;
+      } else {
+        throw new Error(result.error || 'Failed to generate summary');
+      }
+    } catch (err) {
+      setError('Failed to generate summary');
+      console.error('Summary generation error:', err);
+      return null;
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   useEffect(() => {
-    if (userId) {
+    if (userId || chatId) {
       if (timestamp) {
         fetchSummary(timestamp);
+      } else if (chatId) {
+        fetchSummary(undefined, chatId);
       } else {
         fetchSummaryHistory();
       }
     }
-  }, [userId, timestamp]);
+  }, [userId, timestamp, chatId]);
 
   return {
     summary,
     summaries,
     isLoading,
+    isGenerating,
     error,
     fetchSummary,
+    generateSummary,
     createSummary,
     fetchSummaryHistory,
     clearError: () => setError(null),

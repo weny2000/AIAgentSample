@@ -33,6 +33,40 @@ export function ChatForm({
     userSkills: '',
   });
 
+  // サマリー生成関数（シンプル版）
+  const generateChatSummary = async () => {
+    try {
+      // 固定のユーザーID（デモ用）
+      const userId = 'user-1';
+
+      const summaryRequest = {
+        userId: userId,
+        chatId: chatId,
+      };
+
+      const summaryResponse = await fetch('/api/chat/summary', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(summaryRequest),
+      });
+
+      if (summaryResponse.ok) {
+        const result = await summaryResponse.json();
+        console.log(
+          'Chat summary generated successfully:',
+          result.data?.summary
+        );
+      } else {
+        console.warn('Failed to generate chat summary');
+      }
+    } catch (error) {
+      // サマリー生成のエラーは無視（メインの機能に影響させない）
+      console.warn('Error generating chat summary:', error);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -81,6 +115,9 @@ export function ChatForm({
       if (result.success && result.data) {
         // アシスタントの返答を追加
         onMessageSent('', result.data.content);
+
+        // サマリーAPIを呼び出し（バックグラウンドで実行、エラーは無視）
+        generateChatSummary();
       } else {
         console.error('Failed to send message:', result.error);
         // エラー処理: エラーメッセージを表示
