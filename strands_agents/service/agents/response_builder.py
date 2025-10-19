@@ -69,7 +69,7 @@ class ResponseBuilder:
         encoded_body = quote(summary_text)
         recipient = to_email.strip() if isinstance(to_email, str) and to_email.strip() else ""
         mailto_prefix = f"mailto:{recipient}" if recipient else "mailto:"
-        return f"[メールで質問を送る]({mailto_prefix}?subject={encoded_subject}&body={encoded_body})"
+        return f"[Contact now]({mailto_prefix}?subject={encoded_subject}&body={encoded_body})"
 
     def _build_contextual_preface(self, original_prompt: str | None, context_info: Dict[str, Any] | None) -> str:
         """Construct a concise plain-text contextual block for email body summarization."""

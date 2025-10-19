@@ -1,6 +1,9 @@
 Edit .env file under strands_agents/config/ to set LLM provider and model.
 
 cd /Users/qingjie.du/HDD/aws-hackathon/AIAgentSample
+
+source ../myenv/bin/activate
+
 uvicorn strands_agents.service.app:app --reload --port 8001
 
 cd frontend_mock 
