@@ -1,0 +1,41 @@
+default_agent: strands_agent_entrypoint
+agents:
+  strands_agent_entrypoint:
+    name: strands_agent_entrypoint
+    entrypoint: /Users/qingjie.du/HDD/aws-hackathon/AIAgentSample/strands_agents/strands_agent_entrypoint.py
+    platform: linux/arm64
+    container_runtime: docker
+    source_path: /Users/qingjie.du/HDD/aws-hackathon/AIAgentSample/strands_agents
+    aws:
+      execution_role: arn:aws:iam::622813844230:role/AI-Hackathon-Role
+      execution_role_auto_create: true
+      account: '622813844230'
+      region: us-west-2
+      ecr_repository: 047786098634.dkr.ecr.us-west-2.amazonaws.com/aihackathon/aiagentsample
+      ecr_auto_create: false
+      network_configuration:
+        network_mode: PUBLIC
+        network_mode_config: null
+      protocol_configuration:
+        server_protocol: HTTP
+      observability:
+        enabled: false
+    bedrock_agentcore:
+      agent_id: null
+      agent_arn: null
+      agent_session_id: null
+    codebuild:
+      project_name: null
+      execution_role: null
+      source_bucket: null
+    memory:
+      mode: STM_ONLY
+      memory_id: strands_agent_entrypoint_mem-3GwTI43qIy
+      memory_arn: arn:aws:bedrock-agentcore:us-west-2:622813844230:memory/strands_agent_entrypoint_mem-3GwTI43qIy
+      memory_name: strands_agent_entrypoint_mem
+      event_expiry_days: 30
+      first_invoke_memory_check_done: false
+      was_created_by_toolkit: true
+    authorizer_configuration: null
+    request_header_configuration: null
+    oauth_configuration: null

@@ -59,7 +59,17 @@
       },
       "quality_score": 1.0,
       "timestamp": "2025-10-17T11:51:53.730539"
+    },
+    {
+      "type": "successful_pattern",
+      "pattern": {
+        "name": "role_based_context",
+        "description": "Tailor response for role: PM",
+        "condition": "profile.role == 'PM'"
+      },
+      "quality_score": 1.0,
+      "timestamp": "2025-10-19T09:22:30.192053"
     }
   ],
-  "last_updated": "2025-10-17T11:51:53.731636"
+  "last_updated": "2025-10-19T09:22:30.192844"
 }

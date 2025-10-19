@@ -71,12 +71,49 @@ class ResponseBuilder:
         mailto_prefix = f"mailto:{recipient}" if recipient else "mailto:"
         return f"[メールで質問を送る]({mailto_prefix}?subject={encoded_subject}&body={encoded_body})"
 
-    def _append_email_summary_link(self, content: str, subject: str, to_email: str | None = None, target_languages: List[str] | None = None) -> str:
+    def _build_contextual_preface(self, original_prompt: str | None, context_info: Dict[str, Any] | None) -> str:
+        """Construct a concise plain-text contextual block for email body summarization."""
+        sections: List[str] = []
+        try:
+            if original_prompt and original_prompt.strip():
+                sections.append("【ユーザー質問】\n" + original_prompt.strip())
+            if context_info:
+                sp = context_info.get("selected_person")
+                if isinstance(sp, dict):
+                    name = sp.get("name")
+                    dept = sp.get("department")
+                    if name or dept:
+                        lines = []
+                        if name:
+                            lines.append(f"- 氏名: {name}")
+                        if dept:
+                            lines.append(f"- 所属: {dept}")
+                        sections.append("【対象人物】\n" + "\n".join(lines))
+                search_items = context_info.get("search_summary") or []
+                if isinstance(search_items, list) and search_items:
+                    top_items = search_items[:2]
+                    lines = [f"- {it.get('title','')}: {it.get('snippet','')}" for it in top_items]
+                    sections.append("【参考情報(上位2件)】\n" + "\n".join(lines))
+                tacit_items = context_info.get("tacit_knowledge") or []
+                if isinstance(tacit_items, list) and tacit_items:
+                    top_tacit = tacit_items[:2]
+                    lines = [f"- {it.get('title','')}: {it.get('snippet','')}" for it in top_tacit]
+                    sections.append("【暗黙知(上位2件)】\n" + "\n".join(lines))
+        except Exception:
+            # Fail silently; return what we have
+            pass
+        return "\n\n".join([s for s in sections if s])
+
+    def _append_email_summary_link(self, content: str, subject: str, to_email: str | None = None, target_languages: List[str] | None = None, original_prompt: str | None = None, context_info: Dict[str, Any] | None = None) -> str:
         """
         Summarize content to ~300 words via LLM (plain text) and append a mailto link.
         Falls back to simple truncation if LLM is unavailable or fails.
         """
         summary: str | None = None
+        contextual_preface = self._build_contextual_preface(original_prompt, context_info)
+
+        # Combine contextual preface with original content for summarization input.
+        content_for_summary = contextual_preface + ("\n\n" if contextual_preface and content else "") + content
         try:
             model = build_model()
             if (Agent is not None) and (model is not None):
@@ -93,8 +130,9 @@ class ResponseBuilder:
                     "- Preserve the original input language and tone (e.g., Japanese business etiquette if the input is Japanese)."
                 )
                 user = (
-                    "Draft a plain-text email to the selected person that asks the necessary questions using the following context:\n\n"
-                    f"{content}"
+                    "Draft a plain-text email to the selected person that asks the necessary questions using the following context."
+                    " The context includes the user question, selected person info, and top knowledge items if available.\n\n"
+                    f"{content_for_summary}"
                 )
                 prompt = f"{sys}\n{user}"
                 result = agent(prompt)
@@ -175,7 +213,7 @@ class ResponseBuilder:
             summary = None
 
         if not summary:
-            summary = self._truncate_to_words(content, 300)
+            summary = self._truncate_to_words(content_for_summary, 300)
 
         # Translate summary (email body) to recipient's language if provided
         try:
@@ -192,6 +230,7 @@ class ResponseBuilder:
         except Exception as e:
             logging.getLogger(__name__).warning("Email body translation failed: %s", e)
 
+        # Build final mailto link (still using original content for display; summary for body)
         link = self._build_mailto_link(summary, subject, to_email)
         return f"{content}\n\n{link}"
 
@@ -330,7 +369,7 @@ class ResponseBuilder:
             logging.getLogger(__name__).warning("LLM target-language translation failed: %s", e)
         return text
 
-    async def _finalize_response(self, content: str, subject: str, to_email: str | None, prompt: str | None, target_languages: List[str] | None = None) -> str:
+    async def _finalize_response(self, content: str, subject: str, to_email: str | None, prompt: str | None, target_languages: List[str] | None = None, info: IntermediateInfo | None = None) -> str:
         """
         Translate content and subject to match prompt language (if provided),
         then append email summary link.
@@ -344,7 +383,17 @@ class ResponseBuilder:
         except Exception as e:
             logging.getLogger(__name__).warning("Finalize response translation failed: %s", e)
 
-        return self._append_email_summary_link(translated_content, translated_subject, to_email, target_languages)
+        context_info: Dict[str, Any] | None = None
+        try:
+            if info:
+                context_info = {
+                    "selected_person": info.selected_person,
+                    "search_summary": info.search_summary,
+                    "tacit_knowledge": info.tacit_knowledge,
+                }
+        except Exception:
+            context_info = None
+        return self._append_email_summary_link(translated_content, translated_subject, to_email, target_languages, original_prompt=prompt, context_info=context_info)
 
     async def build_response(self, info: IntermediateInfo, profile: Profile, prompt: str | None = None) -> str:
         if Agent is not None:
@@ -404,37 +453,37 @@ class ResponseBuilder:
                         if isinstance(message, dict):
                             # If message is a dict (JSON response), parse it
                             parsed = self._parse_json_response(message)
-                            return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages)
+                            return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages, info)
                         elif isinstance(message, str):
                             # Try to parse as JSON first
                             try:
                                 json_data = json.loads(message)
                                 parsed = self._parse_json_response(json_data)
-                                return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages)
+                                return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages, info)
                             except json.JSONDecodeError:
                                 # If not JSON, return as is
                                 text = str(message).strip()
                                 if text:
-                                    return await self._finalize_response(text, subject, recipient_email, prompt, recipient_languages)
+                                    return await self._finalize_response(text, subject, recipient_email, prompt, recipient_languages, info)
                     elif isinstance(resp, dict):
                         # If resp itself is a dict (JSON response), parse it
                         parsed = self._parse_json_response(resp)
-                        return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages)
+                        return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages, info)
                     elif isinstance(resp, str):
                         # Try to parse as JSON first
                         try:
                             json_data = json.loads(resp)
                             parsed = self._parse_json_response(json_data)
-                            return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages)
+                            return await self._finalize_response(parsed, subject, recipient_email, prompt, recipient_languages, info)
                         except json.JSONDecodeError:
                             # If not JSON, return as is
                             text = str(resp).strip()
                             if text:
-                                return await self._finalize_response(text, subject, recipient_email, prompt, recipient_languages)
+                                return await self._finalize_response(text, subject, recipient_email, prompt, recipient_languages, info)
                     else:
                         text = str(resp).strip()
                         if text:
-                            return await self._finalize_response(text, subject, recipient_email, prompt, recipient_languages)
+                            return await self._finalize_response(text, subject, recipient_email, prompt, recipient_languages, info)
                 except Exception as e:
                     logging.getLogger(__name__).warning("LLM response generation failed: %s", e)
 
@@ -476,4 +525,4 @@ class ResponseBuilder:
             for tk in info.tacit_knowledge:
                 parts.append(f"- {tk.get('title','')}: {tk.get('snippet','')}")
         content = "\n".join(parts)
-        return await self._finalize_response(content, subject, recipient_email, prompt, recipient_languages)
+        return await self._finalize_response(content, subject, recipient_email, prompt, recipient_languages, info)

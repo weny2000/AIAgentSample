@@ -25,10 +25,10 @@ You should see a sample invocation result printed.
 
 ## Run with AgentCore Local Runtime
 
-The AgentCore CLI can run the entrypoint locally on port 8080:
+The AgentCore CLI can run the entrypoint locally on port 8080. Note that the configuration should use the parent `strands_agents` directory as the source path to include all necessary modules:
 
 ```
-agentcore configure -e strands_agents/agentcore_runtime/strands_agent_entrypoint.py
+agentcore configure -e strands_agents/agentcore_runtime/strands_agent_entrypoint.py --source-path strands_agents
 agentcore launch --local   # or just `agentcore launch` to use CodeBuild for cloud deploy directly
 ```
 
@@ -45,7 +45,7 @@ curl -X POST http://localhost:8080/invocations \
 1. Ensure you have Bedrock model access (e.g., Claude Sonnet 4.0) and AWS credentials configured.
 2. Run configuration (creates `.bedrock_agentcore.yaml` in repo root or current directory):
    ```
-   agentcore configure -e strands_agents/agentcore_runtime/strands_agent_entrypoint.py -r us-west-2
+   agentcore configure -e strands_agents/agentcore_runtime/strands_agent_entrypoint.py --source-path strands_agents -r us-west-2
    ```
 3. Deploy:
    ```

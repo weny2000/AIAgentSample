@@ -15,6 +15,3 @@ scikit-learn
 sentence-transformers
 torch
 httpx
-
-# Optional strands-agents SDK (if needed)
-# strands-agents

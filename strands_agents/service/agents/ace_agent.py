@@ -23,7 +23,8 @@ from .types import IntermediateInfo, Profile, SearchResult
 
 
 # Data directory for storing ACE context
-DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "data"))
+# Use /tmp for container environments where /app may not be writable
+DATA_DIR = os.getenv("ACE_DATA_DIR", "/tmp/ace_data")
 ACE_CONTEXT_PATH = os.path.join(DATA_DIR, "ace_context_store.json")
 
 
@@ -332,3 +333,116 @@ class ACEAgent:
             suggestions.append("Enhance response detail - provide more comprehensive information")
         
         return suggestions
+    
+    def optimize(
+        self,
+        context: Dict[str, Any],
+        validation_feedback: List[str],
+        intermediate: IntermediateInfo,
+        loop_count: int
+    ) -> Dict[str, Any]:
+        """
+        Optimize context based on validation feedback for retry
+        
+        This method analyzes why the response failed validation and generates
+        specific optimization instructions for the next iteration.
+        
+        Args:
+            context: Current execution context from generate()
+            validation_feedback: Feedback from CheckerAgent
+            intermediate: Current intermediate results
+            loop_count: Current retry iteration number
+        
+        Returns:
+            Optimization instructions dictionary with:
+            - keywords_optimization: instructions for keyword extraction
+            - search_optimization: instructions for search improvement
+            - response_optimization: instructions for response building
+            - focus_areas: list of areas to emphasize
+        """
+        optimization = {
+            "timestamp": datetime.now().isoformat(),
+            "loop_count": loop_count,
+            "keywords_optimization": "",
+            "search_optimization": "",
+            "response_optimization": "",
+            "focus_areas": []
+        }
+        
+        # Analyze validation feedback to determine optimization strategy
+        feedback_text = " ".join(validation_feedback).lower()
+        
+        # Optimize keywords if response is too short or lacks content
+        if "too short" in feedback_text or "insufficient" in feedback_text:
+            optimization["keywords_optimization"] = (
+                "Expand keyword extraction to capture more semantic variations and related terms. "
+                "Consider synonyms, related concepts, and domain-specific terminology."
+            )
+            optimization["focus_areas"].append("keyword_expansion")
+        
+        # Optimize search if results are insufficient
+        if "search results" in feedback_text or "insufficient" in feedback_text:
+            optimization["search_optimization"] = (
+                "Broaden search criteria: "
+                "1) Use more diverse keyword combinations "
+                "2) Reduce specificity to capture more results "
+                "3) Include partial matches and fuzzy search"
+            )
+            optimization["focus_areas"].append("search_coverage")
+        
+        # Optimize person selection if contact/department missing
+        if "person" in feedback_text or "contact" in feedback_text or "department" in feedback_text:
+            optimization["search_optimization"] = (
+                "Prioritize results with complete person information: "
+                "1) Filter for entries with contact details "
+                "2) Prefer results with department information "
+                "3) Look for entries with multiple contact methods"
+            )
+            optimization["focus_areas"].append("person_selection")
+        
+        # Optimize response building if structure or content issues
+        if "structure" in feedback_text or "markdown" in feedback_text or "mailto" in feedback_text:
+            optimization["response_optimization"] = (
+                "Enhance response formatting and completeness: "
+                "1) Ensure proper markdown section headers "
+                "2) Include all required sections (contact, summary, tacit knowledge) "
+                "3) Add mailto link with properly formatted subject and body "
+                "4) Provide more detailed explanations in each section"
+            )
+            optimization["focus_areas"].append("response_formatting")
+        
+        # Optimize tacit knowledge integration
+        if "tacit" in feedback_text:
+            optimization["search_optimization"] = (
+                "Enhance tacit knowledge integration: "
+                "1) Ensure tacit knowledge search is executed "
+                "2) Incorporate tacit knowledge findings into response "
+                "3) Highlight unique insights from tacit knowledge"
+            )
+            optimization["focus_areas"].append("tacit_knowledge")
+        
+        # Add general improvement for each iteration
+        if loop_count == 1:
+            optimization["response_optimization"] += (
+                " First retry: Focus on completing all required fields and sections."
+            )
+        elif loop_count == 2:
+            optimization["response_optimization"] += (
+                " Second retry: Emphasize quality and detail in all sections."
+            )
+        elif loop_count >= 3:
+            optimization["response_optimization"] += (
+                " Final retry: Maximize all quality indicators and ensure comprehensive coverage."
+            )
+        
+        # Store optimization in context store for learning
+        self.context_store.append({
+            "type": "optimization_attempt",
+            "loop_count": loop_count,
+            "feedback": validation_feedback,
+            "focus_areas": optimization["focus_areas"],
+            "timestamp": datetime.now().isoformat()
+        })
+        self._save_context_store()
+        
+        return optimization
