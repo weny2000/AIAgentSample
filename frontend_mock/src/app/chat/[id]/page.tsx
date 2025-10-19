@@ -22,11 +22,10 @@ export default function ChatDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
-  const [currentTimestamp, setCurrentTimestamp] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // サマリーフックを使用
-  const { generateSummary, isGenerating } = useChatSummary(
+  const { generateSummary } = useChatSummary(
     'user-1',
     undefined,
     chatId
@@ -255,10 +254,6 @@ export default function ChatDetailPage() {
             <ChatForm
               chatId={chatId}
               onMessageSent={handleMessageSent}
-              onSummaryGenerated={async () => {
-                // サマリーを生成
-                await generateSummary(chatId);
-              }}
               isSubmitting={isSubmitting}
               setIsSubmitting={setIsSubmitting}
             />
@@ -272,7 +267,6 @@ export default function ChatDetailPage() {
           <ChatSummaryDrawer
             userId="user-1" // TODO: 実際のユーザーIDに置き換え
             chatId={chatId}
-            timestamp={currentTimestamp || undefined}
           />
         </div>
       )}

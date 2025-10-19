@@ -73,7 +73,7 @@ export async function uploadNetworkJson(
  */
 export async function getSignedUrlForObject(
   key: string,
-  expiresIn: number = 3600 // デフォルト1時間
+  _expiresIn: number = 3600 // デフォルト1時間
 ): Promise<string> {
   try {
     // 一時的にパブリックURLを返す

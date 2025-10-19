@@ -10,13 +10,13 @@ import {
   CreateNetworkGraphResponse,
 } from '@/lib/types';
 
-export function useNetworkGraph(userId: string) {
+export function useNetworkGraph(_userId: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ネットワーク図生成・保存（サンプル版）
   const createNetworkGraph = async (
-    networkData: CreateNetworkGraphRequest
+    _networkData: CreateNetworkGraphRequest
   ): Promise<CreateNetworkGraphResponse | null> => {
     try {
       setIsLoading(true);
@@ -30,7 +30,7 @@ export function useNetworkGraph(userId: string) {
         networkJsonUrl: '/team_network.json', // 仮のJSONファイル
         timestamp,
       };
-    } catch (err) {
+    } catch {
       setError('Failed to create network graph');
       return null;
     } finally {
@@ -55,7 +55,7 @@ export function useNetworkGraph(userId: string) {
         networkJsonUrl: '/team_network.json',
         timestamp,
       };
-    } catch (err) {
+    } catch {
       setError('Failed to fetch network graph');
       return null;
     }

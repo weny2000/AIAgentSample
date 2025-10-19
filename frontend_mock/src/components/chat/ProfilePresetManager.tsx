@@ -52,7 +52,7 @@ export default function ProfilePresetManager({
       } else {
         setError(data.error || 'Failed to fetch profiles');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     } finally {
       setIsLoading(false);
@@ -82,7 +82,7 @@ export default function ProfilePresetManager({
       } else {
         setError(data.error || 'Failed to create profile');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     }
   };
@@ -110,7 +110,7 @@ export default function ProfilePresetManager({
       } else {
         setError(data.error || 'Failed to update profile');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     }
   };
@@ -132,7 +132,7 @@ export default function ProfilePresetManager({
       } else {
         setError(data.error || 'Failed to set default profile');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     }
   };
@@ -158,7 +158,7 @@ export default function ProfilePresetManager({
       } else {
         setError(data.error || 'Failed to delete profile');
       }
-    } catch (err) {
+    } catch {
       setError('Network error occurred');
     }
   };
@@ -167,7 +167,7 @@ export default function ProfilePresetManager({
     if (userId) {
       fetchProfiles();
     }
-  }, [userId]);
+  }, [userId, fetchProfiles]);
 
   if (isLoading) {
     return <div className={`p-4 ${className}`}>Loading profiles...</div>;

@@ -79,7 +79,7 @@ export async function updateChatSummary(
   try {
     const updateExpressions: string[] = [];
     const expressionAttributeNames: Record<string, string> = {};
-    const expressionAttributeValues: Record<string, any> = {};
+    const expressionAttributeValues: Record<string, unknown> = {};
 
     Object.entries(updates).forEach(([key, value]) => {
       if (key !== 'userId' && key !== 'timestamp') {
@@ -195,7 +195,7 @@ export async function updateUserProfile(
   try {
     const updateExpressions: string[] = [];
     const expressionAttributeNames: Record<string, string> = {};
-    const expressionAttributeValues: Record<string, any> = {};
+    const expressionAttributeValues: Record<string, unknown> = {};
 
     Object.entries(updates).forEach(([key, value]) => {
       if (key !== 'userId' && key !== 'profileId') {

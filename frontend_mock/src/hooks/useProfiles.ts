@@ -63,7 +63,7 @@ export function useProfiles(userId: string) {
       // ローカル状態を更新
       setProfiles(prev => [...prev, newProfile]);
       return true;
-    } catch (err) {
+    } catch {
       setError('Failed to create profile');
       return false;
     }
@@ -92,7 +92,7 @@ export function useProfiles(userId: string) {
         )
       );
       return true;
-    } catch (err) {
+    } catch {
       setError('Failed to update profile');
       return false;
     }
@@ -114,7 +114,7 @@ export function useProfiles(userId: string) {
         }))
       );
       return true;
-    } catch (err) {
+    } catch {
       setError('Failed to set default profile');
       return false;
     }
@@ -130,7 +130,7 @@ export function useProfiles(userId: string) {
         prev.filter(profile => profile.profileId !== profileId)
       );
       return true;
-    } catch (err) {
+    } catch {
       setError('Failed to delete profile');
       return false;
     }
@@ -145,7 +145,7 @@ export function useProfiles(userId: string) {
     if (userId) {
       fetchProfiles();
     }
-  }, [userId]);
+  }, [userId, fetchProfiles]);
 
   return {
     profiles,

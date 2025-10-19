@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ChatSummary, ApiResponse } from '@/lib/types';
+import { ChatSummary } from '@/lib/types';
 import summariesData from '../../../../../../public/summaries.json';
 
 // サマリー取得（JSONファイルから）

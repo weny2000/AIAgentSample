@@ -3,7 +3,6 @@ import { GoogleGenAI } from '@google/genai';
 import fs from 'fs/promises';
 import path from 'path';
 import { ChatSummary, CreateSummaryRequest } from '@/lib/types';
-import { v4 as uuidv4 } from 'uuid';
 
 // GoogleGenAI クライアントの初期化
 const ai = new GoogleGenAI({
@@ -11,12 +10,12 @@ const ai = new GoogleGenAI({
 });
 
 // メモリベースの要約ストレージ（サーバー再起動まで保持）
-let memorySummaries: ChatSummary[] = [];
+const memorySummaries: ChatSummary[] = [];
 
 // 要約生成用のプロンプト
-function buildSummaryPrompt(chatHistory: any[]): string {
+function buildSummaryPrompt(chatHistory: { role: string; content: string }[]): string {
   const conversationText = chatHistory
-    .map((msg: any) => `${msg.role}: ${msg.content}`)
+    .map((msg) => `${msg.role}: ${msg.content}`)
     .join('\n\n');
 
   return `以下のチャット履歴を分析して、簡潔で有用なサマリーを作成してください。
@@ -61,7 +60,7 @@ async function generateSummaryFromChatHistory(
     const allChats = JSON.parse(chatHistoryData);
 
     // 指定されたchatIdの履歴を取得
-    const targetChat = allChats.find((chat: any) => chat.chatId === chatId);
+    const targetChat = allChats.find((chat: { chatId: string; messages: { role: string; content: string }[] }) => chat.chatId === chatId);
 
     if (
       !targetChat ||

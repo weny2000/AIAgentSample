@@ -26,7 +26,7 @@ export function useChatSummary(
   const fetchSummary = async (
     targetTimestamp?: string,
     targetChatId?: string,
-    forceRefresh?: boolean
+    _forceRefresh?: boolean
   ) => {
     if (!userId && !targetChatId) return;
 
@@ -146,7 +146,7 @@ export function useChatSummary(
         summary: newSummary.summary,
         timestamp: newSummary.timestamp,
       };
-    } catch (err) {
+    } catch {
       setError('Failed to create summary');
       return null;
     }
@@ -205,7 +205,7 @@ export function useChatSummary(
         fetchSummaryHistory();
       }
     }
-  }, [userId, timestamp, chatId]);
+  }, [userId, timestamp, chatId, fetchSummary, fetchSummaryHistory]);
 
   return {
     summary,

@@ -4,13 +4,12 @@
 
 'use client';
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, ExternalLink } from 'lucide-react';
-import { ChatSummary } from '@/lib/types';
 import { useChatSummary } from '@/hooks/useChatSummary';
 import { useNetworkGraph } from '@/hooks/useNetworkGraph';
 
@@ -39,7 +38,7 @@ export default function ChatSummaryDrawer({
     generateSummary,
   } = useChatSummary(userId, timestamp, chatId);
 
-  const { fetchNetworkGraph, error: networkError } = useNetworkGraph(userId);
+  const { error: networkError } = useNetworkGraph(userId);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // データの更新（カスタムフック使用）

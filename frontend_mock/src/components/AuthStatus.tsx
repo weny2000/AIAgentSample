@@ -4,7 +4,6 @@ import { useSession, signIn, signOut } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { User, LogOut } from 'lucide-react';
-import Link from 'next/link';
 
 export default function AuthStatus() {
   const { data: session, status } = useSession();

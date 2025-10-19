@@ -1,6 +1,4 @@
 import { type NextAuthOptions } from 'next-auth';
-import { type JWT } from 'next-auth/jwt';
-import { type User, type Account, type Session } from 'next-auth';
 import CognitoProvider from 'next-auth/providers/cognito';
 
 const cognitoClientId = process.env.COGNITO_CLIENT_ID;
