@@ -1,0 +1,30 @@
+[
+  {
+    "userId": "user-1",
+    "timestamp": "2025-01-19T10:00:00.000Z",
+    "title": "Next.jsプロジェクトの最適化について",
+    "summary": "【会話サマリー】\nユーザーがNext.jsアプリケーションのパフォーマンス最適化について質問。\n\n主なポイント:\n- バンドルサイズの削減方法\n- 画像最適化\n- SSRとSSGの使い分け\n- Core Web Vitalsの改善\n\nAIアシスタントが具体的な実装方法と最適化テクニックを提案しました。",
+    "networkGraph": "https://example.com/network/graph-1.html",
+    "networkJson": "https://example.com/network/json-1.json",
+    "createdAt": "2025-01-19T10:00:00.000Z",
+    "updatedAt": "2025-01-19T10:15:00.000Z"
+  },
+  {
+    "userId": "user-1",
+    "timestamp": "2025-01-18T14:30:00.000Z",
+    "title": "TypeScriptの型システム活用法",
+    "summary": "【会話サマリー】\nTypeScriptの高度な型システムについてのディスカッション。\n\n学習内容:\n- Conditional Types\n- Mapped Types\n- Template Literal Types\n- ユーティリティ型の活用\n\n実際のプロジェクトでの活用例とベストプラクティスを共有しました。",
+    "createdAt": "2025-01-18T14:30:00.000Z",
+    "updatedAt": "2025-01-18T14:45:00.000Z"
+  },
+  {
+    "userId": "user-1",
+    "timestamp": "2025-01-17T16:20:00.000Z",
+    "title": "AWS Lambda関数の設計パターン",
+    "summary": "【会話サマリー】\nサーバーレスアーキテクチャにおけるLambda関数の設計について。\n\n検討した内容:\n- 関数の分割粒度\n- 環境変数管理\n- エラーハンドリング\n- 監視・ロギング戦略\n\nスケーラブルなサーバーレスアプリケーションの構築方針を決定しました。",
+    "networkGraph": "https://example.com/network/graph-2.html",
+    "networkJson": "https://example.com/network/json-2.json",
+    "createdAt": "2025-01-17T16:20:00.000Z",
+    "updatedAt": "2025-01-17T16:35:00.000Z"
+  }
+]

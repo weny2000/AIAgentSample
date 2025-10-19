@@ -18,6 +18,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --only=production
 COPY --from=build /app/.next ./.next
+COPY --from=build /app/public ./public
 
 # 実行時の環境変数を設定可能にする
 ENV COGNITO_CLIENT_ID=""
