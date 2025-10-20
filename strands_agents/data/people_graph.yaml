@@ -4,7 +4,7 @@ people:
     preferred_contact: email:alice.tanaka@example.com
     contacts:
       - email: alice.tanaka@example.com
-      - slack: "@alice_t"
+      - slack: '@alice_t'
     influences:
       - name: Bob Suzuki
         weight: 0.8
@@ -16,13 +16,16 @@ people:
       - LLM
       - Next.js
       - FastAPI
+      - Python
+      - Machine Learning
+      - Deep Learning
 
   - name: Bob Suzuki
     department: Platform
     preferred_contact: slack:@bob_s
     contacts:
       - email: bob.suzuki@example.com
-      - slack: "@bob_s"
+      - slack: '@bob_s'
     influences:
       - name: Alice Tanaka
         weight: 0.5
@@ -32,6 +35,9 @@ people:
       - AWS
       - Bedrock
       - DevOps
+      - Kubernetes
+      - Docker
+      - Terraform
 
   - name: Carol Watanabe
     department: Frontend
@@ -50,3 +56,370 @@ people:
       - Next.js
       - UX
       - Prompting
+      - UI Design
+      - Figma
+      - React Native
+
+  - name: David Kim
+    department: Backend
+    preferred_contact: email:david.kim@example.com
+    contacts:
+      - email: david.kim@example.com
+      - slack: '@david_k'
+    influences:
+      - name: Alice Tanaka
+        weight: 0.7
+      - name: Emma Wilson
+        weight: 0.5
+    languages:
+      - Korean
+      - English
+    expertise:
+      - Node.js
+      - PostgreSQL
+      - Microservices
+      - FastAPI
+      - Test Automation
+      - Docker
+
+  - name: Emma Wilson
+    department: Data Science
+    preferred_contact: teams:emma.wilson
+    contacts:
+      - email: emma.wilson@example.com
+      - teams: emma.wilson
+    influences:
+      - name: Frank Chen
+        weight: 0.6
+      - name: Grace Nakamura
+        weight: 0.4
+    languages:
+      - English
+    expertise:
+      - Python
+      - Machine Learning
+      - TensorFlow
+      - PyTorch
+      - Analytics
+      - Deep Learning
+
+  - name: Frank Chen
+    department: Infrastructure
+    preferred_contact: slack:@frank_c
+    contacts:
+      - email: frank.chen@example.com
+      - slack: '@frank_c'
+    influences:
+      - name: Bob Suzuki
+        weight: 0.8
+      - name: Helen Rodriguez
+        weight: 0.3
+    languages:
+      - Chinese
+      - English
+    expertise:
+      - Kubernetes
+      - Docker
+      - Terraform
+      - AWS
+      - DevOps
+      - Process Optimization
+
+  - name: Grace Nakamura
+    department: Security
+    preferred_contact: email:grace.nakamura@example.com
+    contacts:
+      - email: grace.nakamura@example.com
+      - slack: '@grace_n'
+    influences:
+      - name: Frank Chen
+        weight: 0.7
+      - name: Ian Thompson
+        weight: 0.5
+    languages:
+      - Japanese
+      - English
+    expertise:
+      - Cybersecurity
+      - Penetration Testing
+      - OWASP
+      - Compliance
+      - Corporate Law
+      - Contract Management
+
+  - name: Helen Rodriguez
+    department: Product
+    preferred_contact: teams:helen.r
+    contacts:
+      - email: helen.rodriguez@example.com
+      - teams: helen.r
+    influences:
+      - name: Carol Watanabe
+        weight: 0.6
+      - name: Jack Williams
+        weight: 0.4
+    languages:
+      - Spanish
+      - English
+    expertise:
+      - Product Management
+      - Agile
+      - Scrum
+      - UX
+      - Digital Marketing
+      - Analytics
+
+  - name: Ian Thompson
+    department: Mobile
+    preferred_contact: slack:@ian_t
+    contacts:
+      - email: ian.thompson@example.com
+      - slack: '@ian_t'
+    influences:
+      - name: Carol Watanabe
+        weight: 0.5
+      - name: Kate Johnson
+        weight: 0.3
+    languages:
+      - English
+    expertise:
+      - React Native
+      - iOS
+      - Android
+      - UI Design
+      - Test Automation
+      - Node.js
+
+  - name: Jack Williams
+    department: QA
+    preferred_contact: email:jack.williams@example.com
+    contacts:
+      - email: jack.williams@example.com
+      - teams: jack.w
+    influences:
+      - name: David Kim
+        weight: 0.6
+      - name: Lisa Brown
+        weight: 0.4
+    languages:
+      - English
+    expertise:
+      - Test Automation
+      - Selenium
+      - Jest
+      - Python
+      - DevOps
+      - Cybersecurity
+
+  - name: Kate Johnson
+    department: Marketing
+    preferred_contact: teams:kate.j
+    contacts:
+      - email: kate.johnson@example.com
+      - teams: kate.j
+    influences:
+      - name: Helen Rodriguez
+        weight: 0.7
+      - name: Mike Davis
+        weight: 0.2
+    languages:
+      - English
+    expertise:
+      - Digital Marketing
+      - SEO
+      - Analytics
+      - B2B Sales
+      - Customer Service
+      - Communication
+
+  - name: Lisa Brown
+    department: HR
+    preferred_contact: email:lisa.brown@example.com
+    contacts:
+      - email: lisa.brown@example.com
+      - slack: '@lisa_b'
+    influences:
+      - name: Helen Rodriguez
+        weight: 0.5
+      - name: Nancy Lee
+        weight: 0.3
+    languages:
+      - English
+    expertise:
+      - Talent Acquisition
+      - Performance Management
+      - Employee Relations
+      - Communication
+      - Excel
+      - Compliance
+
+  - name: Mike Davis
+    department: Sales
+    preferred_contact: slack:@mike_d
+    contacts:
+      - email: mike.davis@example.com
+      - slack: '@mike_d'
+    influences:
+      - name: Kate Johnson
+        weight: 0.6
+      - name: Oliver Garcia
+        weight: 0.4
+    languages:
+      - English
+    expertise:
+      - B2B Sales
+      - CRM
+      - Salesforce
+      - Digital Marketing
+      - Customer Service
+      - Communication
+
+  - name: Nancy Lee
+    department: Finance
+    preferred_contact: email:nancy.lee@example.com
+    contacts:
+      - email: nancy.lee@example.com
+      - teams: nancy.l
+    influences:
+      - name: Lisa Brown
+        weight: 0.5
+      - name: Paul Martinez
+        weight: 0.3
+    languages:
+      - English
+    expertise:
+      - Financial Planning
+      - Budget Management
+      - Excel
+      - Analytics
+      - Performance Management
+      - Process Optimization
+
+  - name: Oliver Garcia
+    department: Legal
+    preferred_contact: teams:oliver.g
+    contacts:
+      - email: oliver.garcia@example.com
+      - teams: oliver.g
+    influences:
+      - name: Nancy Lee
+        weight: 0.4
+      - name: Quinn Taylor
+        weight: 0.2
+    languages:
+      - Spanish
+      - English
+    expertise:
+      - Corporate Law
+      - Contract Management
+      - Compliance
+      - Cybersecurity
+      - Financial Planning
+      - Employee Relations
+
+  - name: Paul Martinez
+    department: Operations
+    preferred_contact: slack:@paul_m
+    contacts:
+      - email: paul.martinez@example.com
+      - slack: '@paul_m'
+    influences:
+      - name: Frank Chen
+        weight: 0.7
+      - name: Rachel Smith
+        weight: 0.5
+    languages:
+      - Spanish
+      - English
+    expertise:
+      - Process Optimization
+      - Lean Management
+      - Six Sigma
+      - DevOps
+      - Budget Management
+      - Analytics
+
+  - name: Quinn Taylor
+    department: Design
+    preferred_contact: email:quinn.taylor@example.com
+    contacts:
+      - email: quinn.taylor@example.com
+      - slack: '@quinn_t'
+    influences:
+      - name: Carol Watanabe
+        weight: 0.8
+      - name: Rachel Smith
+        weight: 0.3
+    languages:
+      - English
+    expertise:
+      - UI Design
+      - Figma
+      - Design Systems
+      - UX
+      - Next.js
+      - Technical Writing
+
+  - name: Rachel Smith
+    department: Customer Support
+    preferred_contact: teams:rachel.s
+    contacts:
+      - email: rachel.smith@example.com
+      - teams: rachel.s
+    influences:
+      - name: Helen Rodriguez
+        weight: 0.6
+      - name: Sam Anderson
+        weight: 0.4
+    languages:
+      - English
+    expertise:
+      - Customer Service
+      - Zendesk
+      - Communication
+      - B2B Sales
+      - Technical Writing
+      - CRM
+
+  - name: Sam Anderson
+    department: DevRel
+    preferred_contact: slack:@sam_a
+    contacts:
+      - email: sam.anderson@example.com
+      - slack: '@sam_a'
+    influences:
+      - name: Alice Tanaka
+        weight: 0.7
+      - name: David Kim
+        weight: 0.5
+    languages:
+      - English
+    expertise:
+      - Developer Relations
+      - Technical Writing
+      - Community Building
+      - Digital Marketing
+      - Communication
+      - Python
+
+  - name: Taro Yamamoto
+    department: AI Research
+    preferred_contact: email:taro.yamamoto@example.com
+    contacts:
+      - email: taro.yamamoto@example.com
+      - slack: '@taro_y'
+    influences:
+      - name: Alice Tanaka
+        weight: 0.9
+      - name: Emma Wilson
+        weight: 0.6
+    languages:
+      - Japanese
+      - English
+    expertise:
+      - Deep Learning
+      - PyTorch
+      - Computer Vision
+      - Natural Language Processing
+      - LLM
+      - Machine Learning
