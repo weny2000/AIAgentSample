@@ -122,3 +122,4 @@ cdk.context.json
 __pycache__/
 *.py[cod]
 strands_agents/for_dev/
+strands_agents/service/agent_states/
