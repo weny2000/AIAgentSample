@@ -19,3 +19,5 @@ numpy
 # torch  # Comment out if not needed - very heavy!
 
 httpx
+
+typing_extensions
