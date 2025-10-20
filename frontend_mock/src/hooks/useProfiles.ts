@@ -18,8 +18,6 @@ export function useProfiles(userId: string) {
 
   // プロフィール一覧を取得（JSONデータから）
   const fetchProfiles = async () => {
-    if (!userId) return;
-
     try {
       setIsLoading(true);
       setError(null);
@@ -141,17 +139,15 @@ export function useProfiles(userId: string) {
     return profiles.find(profile => profile.isDefault) || null;
   };
 
+  // 初回描画時のみプロフィールを読み込み
   useEffect(() => {
-    if (userId) {
-      fetchProfiles();
-    }
-  }, [userId, fetchProfiles]);
+    fetchProfiles();
+  }, []);
 
   return {
     profiles,
     isLoading,
     error,
-    fetchProfiles,
     createProfile,
     updateProfile,
     setDefaultProfile,

@@ -87,7 +87,7 @@ export function ChatFormUserProfile({
         });
       }
     }
-  }, [profiles, formData, onFormDataChange]);
+  }, [profiles]);
 
   // プリセット選択ハンドラー
   const handlePresetSelect = (profile: ProfileResponse) => {
