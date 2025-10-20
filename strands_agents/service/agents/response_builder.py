@@ -64,12 +64,44 @@ class ResponseBuilder:
         except Exception:
             return "ご質問のお願い"
 
-    def _build_mailto_link(self, summary_text: str, subject: str = "ご質問のお願い", to_email: str | None = None) -> str:
+    def _build_mailto_link(self, summary_text: str, subject: str = "ご質問のお願い", to_email: str | None = None, person_name: str | None = None, target_language: str | None = None) -> str:
         encoded_subject = quote(subject)
         encoded_body = quote(summary_text)
         recipient = to_email.strip() if isinstance(to_email, str) and to_email.strip() else ""
         mailto_prefix = f"mailto:{recipient}" if recipient else "mailto:"
-        return f"[Contact now]({mailto_prefix}?subject={encoded_subject}&body={encoded_body})"
+        
+        # Translate UI labels based on target language
+        contact_text = "Contact now"
+        graph_text = "Person Graph"
+        
+        if target_language:
+            lang_lower = target_language.lower()
+            if lang_lower in ("japanese", "ja", "日本語", "jp"):
+                contact_text = "連絡する"
+                graph_text = "人物グラフ"
+            elif lang_lower in ("chinese", "zh", "中文", "cn"):
+                contact_text = "立即联系"
+                graph_text = "人物关系图"
+            elif lang_lower in ("spanish", "es", "español"):
+                contact_text = "Contactar ahora"
+                graph_text = "Gráfico de persona"
+            elif lang_lower in ("french", "fr", "français"):
+                contact_text = "Contacter maintenant"
+                graph_text = "Graphique de personne"
+            elif lang_lower in ("german", "de", "deutsch"):
+                contact_text = "Jetzt kontaktieren"
+                graph_text = "Personengraph"
+        
+        contact_link = f"[{contact_text}]({mailto_prefix}?subject={encoded_subject}&body={encoded_body})"
+        
+        # Add Person Graph link if person_name is provided
+        if person_name:
+            # Replace spaces with underscores for the URL
+            name_with_underbar = person_name.replace(' ', '_').replace('　', '_').lower()  # Handle both ASCII and full-width spaces, convert to lowercase
+            graph_link = f"[{graph_text}](/team_network.html?focus={name_with_underbar})"
+            return f"{contact_link} | {graph_link}"
+        
+        return contact_link
 
     def _build_contextual_preface(self, original_prompt: str | None, context_info: Dict[str, Any] | None) -> str:
         """Construct a concise plain-text contextual block for email body summarization."""
@@ -104,7 +136,7 @@ class ResponseBuilder:
             pass
         return "\n\n".join([s for s in sections if s])
 
-    def _append_email_summary_link(self, content: str, subject: str, to_email: str | None = None, target_languages: List[str] | None = None, original_prompt: str | None = None, context_info: Dict[str, Any] | None = None) -> str:
+    def _append_email_summary_link(self, content: str, subject: str, to_email: str | None = None, target_languages: List[str] | None = None, original_prompt: str | None = None, context_info: Dict[str, Any] | None = None, content_language: str | None = None) -> str:
         """
         Summarize content to ~300 words via LLM (plain text) and append a mailto link.
         Falls back to simple truncation if LLM is unavailable or fails.
@@ -230,9 +262,74 @@ class ResponseBuilder:
         except Exception as e:
             logging.getLogger(__name__).warning("Email body translation failed: %s", e)
 
+        # Extract person name from context_info if available
+        person_name = None
+        try:
+            if context_info and isinstance(context_info.get("selected_person"), dict):
+                person_name = context_info["selected_person"].get("name")
+        except Exception:
+            person_name = None
+        
+        # Determine the language for UI labels (prefer content_language, fallback to target_languages)
+        ui_language = content_language
+        if not ui_language and target_languages:
+            for lang in target_languages:
+                if isinstance(lang, str) and lang.strip():
+                    ui_language = lang.strip()
+                    break
+        
         # Build final mailto link (still using original content for display; summary for body)
-        link = self._build_mailto_link(summary, subject, to_email)
+        link = self._build_mailto_link(summary, subject, to_email, person_name, ui_language)        
         return f"{content}\n\n{link}"
+
+    async def _detect_language_from_prompt(self, prompt_text: str) -> str | None:
+        """
+        Use LLM to detect the language of the prompt.
+        Returns language name (e.g., "Japanese", "English") or None if detection fails.
+        """
+        try:
+            model = build_model()
+            if (Agent is not None) and (model is not None):
+                agent = Agent(model=model)
+                sys = (
+                    "You are a language detection assistant.\n"
+                    "Task: Detect the language of the provided text.\n"
+                    "Requirements:\n"
+                    "- Output ONLY the language name in English (e.g., 'Japanese', 'English', 'Chinese', 'Spanish', 'French', 'German').\n"
+                    "- Do not add any explanations or additional text.\n"
+                    "- If uncertain, output 'English'."
+                )
+                user = f"Text to detect language:\n{prompt_text}"
+                prompt = f"{sys}\n{user}"
+                result = agent(prompt)
+                if asyncio.iscoroutine(result):
+                    resp = await result
+                else:
+                    resp = result
+
+                if hasattr(resp, "message"):
+                    message = getattr(resp, "message", "")
+                    if isinstance(message, dict):
+                        return self._parse_json_response(message).strip()
+                    elif isinstance(message, str):
+                        try:
+                            json_data = json.loads(message)
+                            return self._parse_json_response(json_data).strip()
+                        except json.JSONDecodeError:
+                            return str(message).strip()
+                elif isinstance(resp, dict):
+                    return self._parse_json_response(resp).strip()
+                elif isinstance(resp, str):
+                    try:
+                        json_data = json.loads(resp)
+                        return self._parse_json_response(json_data).strip()
+                    except json.JSONDecodeError:
+                        return str(resp).strip()
+                else:
+                    return str(resp).strip()
+        except Exception as e:
+            logging.getLogger(__name__).warning("Language detection failed: %s", e)
+        return None
 
     async def _translate_to_prompt_language(self, text: str, prompt_text: str) -> str:
         """
@@ -376,10 +473,13 @@ class ResponseBuilder:
         """
         translated_content = content
         translated_subject = subject
+        content_language = None
         try:
             if prompt:
                 translated_content = await self._translate_to_prompt_language(content, prompt)
                 translated_subject = await self._translate_to_prompt_language(subject, prompt)
+                # Detect the language from the prompt for UI label translation
+                content_language = await self._detect_language_from_prompt(prompt)
         except Exception as e:
             logging.getLogger(__name__).warning("Finalize response translation failed: %s", e)
 
@@ -393,7 +493,7 @@ class ResponseBuilder:
                 }
         except Exception:
             context_info = None
-        return self._append_email_summary_link(translated_content, translated_subject, to_email, target_languages, original_prompt=prompt, context_info=context_info)
+        return self._append_email_summary_link(translated_content, translated_subject, to_email, target_languages, original_prompt=prompt, context_info=context_info, content_language=content_language)
 
     async def build_response(self, info: IntermediateInfo, profile: Profile, prompt: str | None = None) -> str:
         if Agent is not None:
@@ -404,6 +504,7 @@ class ResponseBuilder:
                     "You are a helpful assistant. Tailor the answer to the user's role and skills. "
                     "Summarize briefly and include sections::"
                     "'Recommended contact' section with the selected person, their department, and preferred contact."
+                    "'Reference information' (参考情報) section summarizing the search summary results."
                     "'Tacit knowledge' section summarizing tacit knowledge results."
                     "Respond strictly in the same language as the provided user prompt and preserve its tone and register."
                 )

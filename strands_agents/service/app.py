@@ -212,6 +212,11 @@ async def run_agents(req: RunRequest) -> Dict[str, Any]:
                 {"title": r.get("title", ""), "snippet": r.get("snippet", "")} 
                 for r in tacit_results[:5]
             ]
+            intermediate.search_summary = [
+                {"title": r.get("title", ""), "snippet": r.get("snippet", "")}
+                for r in results[:5]
+            ]
+
             
             # Step 5: Build response
             agent_start = time.time()
