@@ -6,7 +6,8 @@ import { ChatHistorySideBar } from '@/components/chat/ChatHistorySideBar';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function ChatLayout({
   children,
@@ -14,6 +15,8 @@ export default function ChatLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { status } = useSession();
   const [chatHistories, setChatHistories] = useState<
     ChatHistorySummaryObject[]
   >([]);
@@ -23,7 +26,18 @@ export default function ChatLayout({
   // 現在のチャットIDを取得
   const currentChatId = pathname.split('/')[2] || null;
 
-  // チャット履歴一覧の取得（一度だけ実行）
+  // 認証チェック - レイアウトレベルで全チャット関連ページを保護
+  useEffect(() => {
+    if (status === 'loading') return; // セッションロード中は待機
+
+    if (status === 'unauthenticated') {
+      // 未認証の場合はホームページにリダイレクト
+      router.push('/');
+      return;
+    }
+  }, [status, router]);
+
+  // チャット履歴一覧の取得（認証済みの場合のみ実行）
   useEffect(() => {
     const fetchChatHistories = async () => {
       try {
@@ -43,13 +57,21 @@ export default function ChatLayout({
       }
     };
 
-    fetchChatHistories();
-  }, []);
+    // 認証済みの場合のみチャット履歴を取得
+    if (status === 'authenticated') {
+      fetchChatHistories();
+    }
+  }, [status]);
 
   // サイドバートグル
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  // 認証チェック中または未認証の場合は何も表示しない
+  if (status === 'loading' || status === 'unauthenticated') {
+    return null;
+  }
 
   return (
     <SidebarProvider>
@@ -57,30 +79,33 @@ export default function ChatLayout({
         {/* モバイル用サイドバーオーバーレイ */}
         <div
           className={`
-          lg:hidden fixed inset-0 z-50 transition-opacity
+          lg:hidden fixed inset-0 z-50 transition-opacity duration-300
           ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
         `}
         >
           <div
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm"
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={toggleSidebar}
           />
           <div
             className={`
-            absolute left-0 top-0 h-full w-80 bg-background border-r shadow-lg transform transition-transform
+            absolute left-0 top-0 h-full w-80 bg-background border-r shadow-lg transform transition-transform duration-300 ease-in-out
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
           >
-            <div className="flex justify-end p-4">
+            <div className="flex justify-end p-4 border-b">
               <Button variant="ghost" size="sm" onClick={toggleSidebar}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
-            <ChatHistorySideBar
-              histories={chatHistories}
-              currentChatId={currentChatId}
-              isLoading={isLoading}
-            />
+            <div className="h-full pb-16">
+              <ChatHistorySideBar
+                histories={chatHistories}
+                currentChatId={currentChatId}
+                isLoading={isLoading}
+                isMobile={true}
+              />
+            </div>
           </div>
         </div>
 
@@ -97,51 +122,27 @@ export default function ChatLayout({
 
           {/* メインコンテンツエリア - 残り領域全体を使用 */}
           <div className="flex-1 flex flex-col h-full">
-            {/* ヘッダー - 固定表示（コンパクト） */}
-            <header className="fixed top-0 right-0 left-0 z-40 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
-              <div className="flex items-center gap-3 max-w-fit">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-sm font-semibold">TacitAi(タシタイ)</h1>
-                  <span className="text-xs text-muted-foreground">
-                    {currentChatId ? 'アクティブなチャット' : '新しいチャット'}
-                  </span>
-                </div>
-              </div>
-            </header>
-
             {/* コンテンツエリア */}
-            <div className="flex-1 flex flex-col pt-[49px] w-full">
-              {children}
-            </div>
+            <div className="flex-1 flex flex-col w-full">{children}</div>
           </div>
         </div>
 
-        {/* モバイルレイアウト - 元のレイアウトを維持 */}
+        {/* モバイルレイアウト */}
         <div className="lg:hidden flex flex-col h-screen">
-          {/* ヘッダー - 固定表示（コンパクト） */}
-          <header className="fixed top-0 right-0 left-0 z-40 border-b bg-background/95 backdrop-blur-sm px-4 py-2">
-            <div className="flex items-center gap-3 max-w-fit">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0"
-                onClick={toggleSidebar}
-              >
-                <Menu className="h-4 w-4" />
-              </Button>
-              <div className="flex items-center gap-2">
-                <h1 className="text-sm font-semibold">TacitAi(タシタイ)</h1>
-                <span className="text-xs text-muted-foreground">
-                  {currentChatId ? 'アクティブなチャット' : '新しいチャット'}
-                </span>
-              </div>
-            </div>
-          </header>
+          {/* ハンバーガーメニューボタン - 左上固定 */}
+          <div className="absolute top-4 left-4 z-40">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 w-9 p-0 bg-background/90 backdrop-blur-sm border shadow-sm"
+              onClick={toggleSidebar}
+            >
+              <Menu className="h-4 w-4" />
+            </Button>
+          </div>
 
           {/* コンテンツエリア */}
-          <div className="flex-1 flex flex-col pt-[49px] w-full">
-            {children}
-          </div>
+          <div className="flex-1 flex flex-col w-full">{children}</div>
         </div>
       </div>
     </SidebarProvider>

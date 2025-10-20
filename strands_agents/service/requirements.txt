@@ -15,3 +15,4 @@ scikit-learn
 sentence-transformers
 torch
 httpx
+typing_extensions

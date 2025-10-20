@@ -1,0 +1,17 @@
+bedrock-agentcore
+bedrock-agentcore-starter-toolkit
+
+# Core dependencies from service/requirements.txt
+fastapi
+uvicorn
+pydantic
+boto3
+botocore
+ollama
+python-dotenv
+pyyaml
+numpy
+scikit-learn
+sentence-transformers
+torch
+httpx

@@ -41,7 +41,47 @@ export async function POST(
       );
     }
 
-    const data = (await res.json()) as { content: string };
+    const data = (await res.json()) as { 
+      content: string;
+      debug?: {
+        keywords?: string[];
+        selected_person?: string;
+        search_summary?: string;
+        tacit_knowledge?: unknown[];
+      };
+      validation?: {
+        is_good?: boolean;
+        score?: number;
+        feedback?: string;
+        loops_executed?: number;
+        optimization_history?: unknown[];
+      };
+      ace?: {
+        instructions_applied?: string;
+        quality_score?: number;
+        patterns_found?: number;
+        suggestions?: string[];
+        deltas_added?: number;
+      };
+      performance?: {
+        total_time_ms?: number;
+        previous_state_loaded?: boolean;
+      };
+    };
+
+    // Log additional information for debugging
+    if (data.validation) {
+      console.log('Validation:', {
+        score: data.validation.score,
+        is_good: data.validation.is_good,
+        loops: data.validation.loops_executed
+      });
+    }
+    if (data.performance) {
+      console.log('Performance:', {
+        total_time_ms: data.performance.total_time_ms
+      });
+    }
 
     const response: ChatResponseObject = {
       messageId: uuidv4(),

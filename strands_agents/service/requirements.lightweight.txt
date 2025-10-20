@@ -1,0 +1,23 @@
+fastapi
+uvicorn[standard]
+pydantic
+strands-agents
+strands-agents[openai] @ git+https://github.com/strands-agents/sdk-python.git@main
+strands-agents[bedrock] @ git+https://github.com/strands-agents/sdk-python.git@main
+strands-agents-tools
+boto3
+botocore
+ollama
+python-dotenv
+pyyaml
+numpy
+
+# Lightweight alternatives for ML dependencies
+# Only include if actually needed for your use case
+# scikit-learn  # Comment out if not needed
+# sentence-transformers  # Comment out if not needed
+# torch  # Comment out if not needed - very heavy!
+
+httpx
+
+typing_extensions

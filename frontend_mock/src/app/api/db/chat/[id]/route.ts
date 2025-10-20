@@ -20,13 +20,18 @@ export async function GET(
     const targetChat = chatHistories.find(chat => chat.chatId === chatId);
 
     if (!targetChat) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: 'Chat not found',
-        },
-        { status: 404 }
-      );
+      // チャットが存在しない場合、新規チャットとして初期化して返す
+      const newChat: ChatHistoryObject = {
+        chatId: chatId,
+        messages: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      return NextResponse.json({
+        success: true,
+        data: newChat,
+      });
     }
 
     return NextResponse.json({

@@ -1,0 +1,42 @@
+[
+  {
+    "profileId": "profile-1",
+    "role": "フロントエンドエンジニア",
+    "skills": "React, TypeScript, Next.js, Tailwind CSS",
+    "isDefault": true,
+    "createdAt": "2025-01-15T09:00:00.000Z",
+    "updatedAt": "2025-01-15T09:00:00.000Z"
+  },
+  {
+    "profileId": "profile-2",
+    "role": "フルスタックエンジニア",
+    "skills": "React, Node.js, PostgreSQL, AWS",
+    "isDefault": false,
+    "createdAt": "2025-01-15T09:15:00.000Z",
+    "updatedAt": "2025-01-15T09:15:00.000Z"
+  },
+  {
+    "profileId": "profile-3",
+    "role": "UI/UXデザイナー",
+    "skills": "Figma, Adobe XD, ユーザビリティテスト, デザインシステム",
+    "isDefault": false,
+    "createdAt": "2025-01-15T09:30:00.000Z",
+    "updatedAt": "2025-01-15T09:30:00.000Z"
+  },
+  {
+    "profileId": "profile-4",
+    "role": "プロダクトマネージャー",
+    "skills": "アジャイル開発, データ分析, ユーザーインタビュー, 競合分析",
+    "isDefault": false,
+    "createdAt": "2025-01-15T09:45:00.000Z",
+    "updatedAt": "2025-01-15T09:45:00.000Z"
+  },
+  {
+    "profileId": "profile-5",
+    "role": "データサイエンティスト",
+    "skills": "Python, SQL, 機械学習, 統計分析, Tableau",
+    "isDefault": false,
+    "createdAt": "2025-01-15T10:00:00.000Z",
+    "updatedAt": "2025-01-15T10:00:00.000Z"
+  }
+]

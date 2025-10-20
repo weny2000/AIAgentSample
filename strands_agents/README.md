@@ -6,6 +6,8 @@ This directory contains a Python FastAPI microservice built using strands-agents
 - PeopleFinder: enriches mock search results with the best person to consult based on an editable people influence graph and preferred contact method
 - ResponseBuilder: tailors the final answer to the user's role and skills profile
 
+**🆕 NEW: ACE Integration** - The system now includes **ACE (Agentic Context Engineering)** from Stanford's "Fine-Tuning is Dead" paper, enabling automatic learning and improvement without fine-tuning. See `ACE_QUICKSTART.md` for details.
+
 The Next.js app calls this service via the API route `/api/strands`. For demo fallback, `/api/openai` remains available; the frontend can switch which endpoint to call via an env flag.
 
 ## Structure
@@ -24,7 +26,7 @@ The Next.js app calls this service via the API route `/api/strands`. For demo fa
 1) Start the Python service
 
 ```
-cd StrandsAgents/service
+cd AIAgentSample
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
@@ -92,3 +94,31 @@ Response:
 ```
 
 All generated code, data, and configs are confined within `StrandsAgents/` for easy migration.
+
+## 🆕 ACE Integration (Agentic Context Engineering)
+
+ACE enables the agent system to **learn and improve automatically** from execution feedback without fine-tuning.
+
+**Quick Start:**
+```bash
+# Run ACE test
+python test_ace_agent.py
+
+# Check ACE statistics
+curl http://localhost:8001/ace/stats
+```
+
+**Documentation:**
+- `ACE_QUICKSTART.md` - Quick start guide
+- `ACE_INTEGRATION_README.md` - Full documentation  
+- `ACE_INTEGRATION_SUMMARY.md` - Implementation summary
+- `ACE_ARCHITECTURE_DIAGRAM.md` - Visual architecture
+
+**New API Endpoints:**
+- `GET /ace/stats` - Learning statistics
+- `GET /ace/context` - View context store
+- `POST /ace/instructions` - Get context instructions
+- `DELETE /ace/context` - Clear context (admin)
+
+**Enhanced Response:**
+The `/agents/run` endpoint now includes `ace` metrics showing quality score, patterns found, and learning progress.
