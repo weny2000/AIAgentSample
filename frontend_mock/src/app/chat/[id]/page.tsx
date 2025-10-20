@@ -1,12 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { useParams } from "next/navigation";
-import { ChatHistoryObject, ApiResponse } from "@/lib/types";
-import { ChatForm } from "@/components/chat/ChatForm";
-import { ChatMessage } from "@/components/chat/ChatMessage";
-import { Skeleton } from "@/components/ui/skeleton";
-import { MessageSquare } from "lucide-react";
+import { useState, useEffect, useRef } from 'react';
+import { useParams } from 'next/navigation';
+import { ChatHistoryObject, ApiResponse } from '@/lib/types';
+import { ChatForm } from '@/components/chat/ChatForm';
+import { ChatMessage } from '@/components/chat/ChatMessage';
+import ChatSummaryDrawer from '@/components/chat/ChatSummaryDrawer';
+import { useChatSummary } from '@/hooks/useChatSummary';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { MessageSquare, PanelRight, PanelRightClose } from 'lucide-react';
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -18,7 +21,15 @@ export default function ChatDetailPage() {
   );
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  // サマリーフックを使用
+  const { generateSummary } = useChatSummary(
+    'user-1',
+    undefined,
+    chatId
+  );
 
   // 現在のチャット詳細の取得
   const fetchCurrentChat = async (id: string) => {
@@ -38,7 +49,7 @@ export default function ChatDetailPage() {
         });
       }
     } catch (error) {
-      console.error("Error fetching current chat:", error);
+      console.error('Error fetching current chat:', error);
       // エラーの場合も新規チャットとして初期化
       setCurrentChat({
         chatId: id,
@@ -78,7 +89,7 @@ export default function ChatDetailPage() {
         messages: [
           ...currentChat.messages,
           {
-            role: "user",
+            role: 'user',
             content: userMessage,
             timestamp: now,
           },
@@ -90,14 +101,14 @@ export default function ChatDetailPage() {
 
     // アシスタントメッセージが空でない場合は追加
     if (assistantResponse.trim()) {
-      setCurrentChat((prevChat) => {
+      setCurrentChat(prevChat => {
         if (!prevChat) return null;
         return {
           ...prevChat,
           messages: [
             ...prevChat.messages,
             {
-              role: "assistant",
+              role: 'assistant',
               content: assistantResponse,
               timestamp: now,
             },
@@ -117,16 +128,21 @@ export default function ChatDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col" style={{ height: "calc(100vh - 49px)" }}>
+      <div className="flex flex-col h-screen bg-background">
+        {/* ヘッダー（スケルトン） */}
+        <div className="shrink-0 p-4 pb-2 border-b">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-6 w-32" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+        </div>
+
         {/* メインコンテンツスケルトン */}
-        <div
-          className="flex-1 overflow-y-auto"
-          style={{ height: "calc(100vh - 49px - 120px)" }}
-        >
+        <div className="flex-1 overflow-y-auto">
           <div className="p-4 space-y-4">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="flex gap-3">
-                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
                 <div className="space-y-2 flex-1">
                   <Skeleton className="h-4 w-20" />
                   <Skeleton className="h-20 w-full" />
@@ -135,76 +151,125 @@ export default function ChatDetailPage() {
             ))}
           </div>
         </div>
-        <div className="fixed bottom-0 right-0 left-0 lg:left-80 p-3 bg-background/95 backdrop-blur-sm border-t">
-          <Skeleton className="h-20 w-full max-w-[800px] mx-auto" />
+
+        {/* フォーム（スケルトン） */}
+        <div className="shrink-0 border-t bg-background">
+          <div className="p-4">
+            <Skeleton className="h-32 w-full" />
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col" style={{ height: "calc(100vh - 49px)" }}>
-      {/* チャットメッセージ表示エリア */}
+    <div className="flex h-screen bg-background">
+      {/* メインチャット領域 */}
       <div
-        className="flex-1 overflow-y-scroll"
-        ref={scrollAreaRef}
-        style={{
-          height: "calc(100vh - 49px - 120px)",
-          minHeight: "400px",
-        }}
+        className={`flex flex-col flex-1 ${isDrawerOpen ? 'mr-80' : ''} transition-all duration-300`}
       >
-        <div className="px-4 pb-[120px]">
-          {currentChat?.messages.length === 0 ? (
-            // 初期状態の表示
-            <div className="flex items-center justify-center min-h-[400px]">
-              <div className="text-center space-y-4 max-w-md mx-auto p-8">
-                <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
-                  <MessageSquare className="h-8 w-8 text-primary" />
-                </div>
-                <h2 className="text-xl font-semibold">
-                  TacitAi(タシタイ)へようこそ
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  何でもお気軽にご質問ください。あなたの役割とスキルを教えていただければ、
-                  より具体的で実用的な回答を提供できます。
-                </p>
-              </div>
+        {/* チャット領域左上のタイトル */}
+        <div className="shrink-0 p-4 pb-2 pl-16 lg:pl-4 border-b bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg font-semibold">AI Assistant</h1>
+              <span className="text-sm text-muted-foreground">
+                {currentChat?.messages.length === 0
+                  ? '新しいチャット'
+                  : 'アクティブなチャット'}
+              </span>
             </div>
-          ) : (
-            // メッセージ一覧の表示
-            <div className="space-y-2 py-4 min-h-[200px]">
-              {currentChat?.messages.map((message, index) => (
-                <ChatMessage key={index} message={message} />
-              ))}
-            </div>
-          )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsDrawerOpen(!isDrawerOpen)}
+              className="flex items-center gap-2"
+            >
+              {isDrawerOpen ? (
+                <>
+                  <PanelRightClose className="h-4 w-4" /> Hide Panel
+                </>
+              ) : (
+                <>
+                  <PanelRight className="h-4 w-4" /> Show Panel
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
 
-          {/* 送信中の表示 */}
-          {isSubmitting && (
-            <div className="p-4 flex items-center gap-3">
-              <div className="animate-pulse flex gap-3 w-full">
-                <Skeleton className="h-8 w-8 rounded-full" />
-                <div className="space-y-2 flex-1">
-                  <Skeleton className="h-4 w-20" />
-                  <Skeleton className="h-12 w-full" />
+        {/* チャットメッセージ表示エリア - フォーム高さを除く */}
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain"
+          ref={scrollAreaRef}
+          style={{
+            height: 'calc(100vh - 80px - 140px)', // ヘッダー80px + フォーム140px
+            minHeight: '300px',
+          }}
+        >
+          <div className="px-4 py-4">
+            {currentChat?.messages.length === 0 ? (
+              // 初期状態の表示
+              <div className="flex items-center justify-center min-h-[300px]">
+                <div className="text-center space-y-4 max-w-md mx-auto p-8">
+                  <div className="h-16 w-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                    <MessageSquare className="h-8 w-8 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-semibold">
+                    TacitAi(タシタイ)へようこそ
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
+                    何でもお気軽にご質問ください。あなたの役割とスキルを教えていただければ、
+                    より具体的で実用的な回答を提供できます。
+                  </p>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              // メッセージ一覧の表示
+              <div className="space-y-4 pb-4">
+                {currentChat?.messages.map((message, index) => (
+                  <ChatMessage key={index} message={message} />
+                ))}
+              </div>
+            )}
+
+            {/* 送信中の表示 */}
+            {isSubmitting && (
+              <div className="px-4 py-2">
+                <div className="animate-pulse flex gap-3 w-full">
+                  <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-12 w-full" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* チャット入力フォーム - 下部固定配置 */}
+        <div className="shrink-0 border-t bg-background shadow-lg">
+          <div className="max-w-full p-4">
+            <ChatForm
+              chatId={chatId}
+              onMessageSent={handleMessageSent}
+              isSubmitting={isSubmitting}
+              setIsSubmitting={setIsSubmitting}
+            />
+          </div>
         </div>
       </div>
 
-      {/* チャット入力フォーム - 固定配置（コンパクト） */}
-      <div className="fixed bottom-0 right-0 left-0 lg:left-80 p-2 bg-background/95 backdrop-blur-sm border-t z-30">
-        <div className="w-full max-w-none lg:max-w-none mx-0 lg:mx-4">
-          <ChatForm
+      {/* 右側サマリーDrawer */}
+      {isDrawerOpen && (
+        <div className="fixed right-0 top-0 w-80 h-screen bg-background border-l shadow-lg">
+          <ChatSummaryDrawer
+            userId="user-1" // TODO: 実際のユーザーIDに置き換え
             chatId={chatId}
-            onMessageSent={handleMessageSent}
-            isSubmitting={isSubmitting}
-            setIsSubmitting={setIsSubmitting}
           />
         </div>
-      </div>
+      )}
     </div>
   );
 }

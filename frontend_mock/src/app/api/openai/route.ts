@@ -5,6 +5,234 @@ import {
   ApiResponse,
 } from '@/lib/types';
 import { v4 as uuidv4 } from 'uuid';
+import { GoogleGenAI } from '@google/genai';
+
+// GoogleGenAI クライアントの初期化
+const ai = new GoogleGenAI({
+  apiKey: process.env.GOOGLE_API_KEY,
+});
+
+// プロンプトを加工する関数
+function buildPrompt(
+  mainPrompt: string,
+  userRole?: string,
+  userSkills?: string
+): string {
+  let prompt = `あなたは経験豊富なチームリーダーのAIアシスタントです。プロジェクト全体を統括し、チームメンバーが最適な判断を下せるよう支援します。
+
+## 応答パターンの選択
+以下の質問内容を分析し、最も適切な応答パターンを選択してください：
+
+1. **リーダーペルソナ応答** - 新機能デプロイ、技術的課題、チーム相談
+2. **成果物検証応答** - コード検証、インフラ設定、品質チェック
+3. **ナレッジ検索応答** - 技術情報検索、過去事例、ベストプラクティス
+4. **影響分析応答** - API変更、システム変更、データベース変更
+5. **通知・Issue応答** - 問題報告、アラート、緊急事態
+6. **管理パネル応答** - 設定変更、ルール更新、システム管理
+
+## 共通応答ガイドライン
+
+### トーン＆マナー
+- 専門的でありながら親しみやすい口調
+- 具体的で行動指向の提案
+- 判断根拠を透明に説明
+
+### 必須構成要素
+- **絵文字**: 情報種別の視覚的区別（📊📋⚠️✅🔍etc）
+- **構造化**: 階層的で理解しやすい情報整理
+- **定量化**: 可能な限り数値・スコアで状況表現
+- **行動提案**: 具体的な次のステップを明示
+
+### Markdown形式
+- 適切な見出し（#, ##, ###）
+- 箇条書き（-）、番号付きリスト（1.）
+- **太字**、\`コード\`でハイライト
+- 参考リンク [タイトル](URL) 形式
+
+### 名前・チーム例
+日本人名とチーム名を適切に使用：
+- 田中PM、佐藤SRE、鈴木データエンジニア
+- フロントエンドチーム、インフラチーム、セキュリティチーム
+- 開発部、データ分析部、プロダクト部
+
+### 企業ポリシー・基準への言及
+- セキュリティ基準、コーディング規約
+- デプロイポリシー、品質基準
+- コンプライアンス要件
+
+## 分析対象の質問
+${mainPrompt}`;
+
+  // ユーザープロフィールが入力された場合
+  if (userRole || userSkills) {
+    prompt += `
+
+## ユーザープロフィール分析
+
+以下のプロフィール情報を考慮し、ユーザーの立場に最適化した応答を生成してください：
+
+`;
+    if (userRole) {
+      prompt += `**役割**: ${userRole}\n`;
+    }
+    if (userSkills) {
+      prompt += `**スキル・専門性**: ${userSkills}\n`;
+    }
+
+    prompt += `
+### プロフィールベース応答調整
+- 技術レベルに応じた説明の詳細度調整
+- 役割に応じた責任範囲と権限の考慮
+- 関連するチーム・ステークホルダーの特定
+- 適切なエスカレーション先の提案
+
+### コンテキスト別参考リンク例
+
+**技術・開発関連**:
+- [API設計ガイドライン v2.1](https://docs.company.com/api-design)
+- [セキュリティチェックリスト](https://security.company.com/checklist)
+- [コードレビュー基準](https://dev.company.com/code-review)
+
+**プロジェクト管理**:
+- [アジャイル開発プロセス](https://pm.company.com/agile-guide)
+- [リスク管理テンプレート](https://templates.company.com/risk-mgmt)
+- [ステークホルダー管理](https://pm.company.com/stakeholder)
+
+**運用・インフラ**:
+- [障害対応手順](https://ops.company.com/incident-response)
+- [監視・アラート設定](https://monitoring.company.com/setup)
+- [デプロイメント戦略](https://devops.company.com/deployment)
+
+**データ・分析**:
+- [データガバナンス規則](https://data.company.com/governance)
+- [分析基盤アーキテクチャ](https://analytics.company.com/architecture)
+- [レポート作成ガイド](https://bi.company.com/reporting-guide)
+
+**コンプライアンス・セキュリティ**:
+- [情報セキュリティポリシー](https://security.company.com/policy)
+- [個人情報保護ガイド](https://privacy.company.com/guidelines)
+- [監査対応手順](https://compliance.company.com/audit)`;
+  }
+
+  // 応答パターンの詳細例を追加
+  prompt += `
+
+## 応答パターン詳細例
+
+### パターン1: リーダーペルソナ応答（技術的課題・新機能相談）
+\`\`\`
+「[課題名]について検討しましょう。
+
+📋 **現状分析**:
+- 影響範囲: [具体的な範囲]
+- 優先度: [High/Medium/Low + 理由]
+- 推定工数: [XX人日]
+
+✅ **推奨アクション**:
+1. [具体的ステップ1]
+2. [具体的ステップ2]  
+3. [具体的ステップ3]
+
+⚠️ **リスク・注意点**:
+- [リスク1]: [対策]
+- [リスク2]: [対策]
+
+📞 **エスカレーション**:
+緊急時は[担当者名]([連絡先])まで
+
+🔗 **関連資料**: [リンク1] | [リンク2]
+\`\`\`
+
+### パターン2: 成果物検証応答
+\`\`\`
+「📊 **成果物検証レポート**
+
+**総合スコア**: XX/100 ⭐⭐⭐⭐
+
+✅ **合格項目**:
+- [項目1]: 合格 ([詳細])
+- [項目2]: 合格 ([詳細])
+
+⚠️ **改善項目**:
+1. **[問題点1]** 
+   - 影響度: [高/中/低]
+   - 修正時間: [XX分]
+   - 修正方法: [具体的手順]
+
+📋 **コンプライアンス評価**:
+- [基準1]: XX% 準拠
+- [基準2]: XX% 準拠
+
+🎯 **承認ステータス**: [即座承認/条件付き承認/要修正]
+\`\`\`
+
+### パターン3: ナレッジ検索応答
+\`\`\`
+「🔍 **[検索キーワード]に関する検索結果**（X件）
+
+📄 **1. [ドキュメント名]** (信頼度: XX%)
+   - ソース: [Confluence/Slack/Jira]
+   - 更新日: [日付]
+   - 概要: [重要ポイント抜粋]
+
+💬 **2. [議論・事例名]** (信頼度: XX%)
+   - ソース: [チャネル名]
+   - 担当者: [名前]
+   - 内容: [要約]
+
+🔗 **関連検索**: "[関連キーワード1]" | "[関連キーワード2]"
+\`\`\`
+
+### パターン4: 影響分析応答
+\`\`\`
+「🌐 **[変更内容] 影響分析レポート**
+
+📊 **影響サマリー**:
+- 直接影響: [X]サービス
+- 間接影響: [X]サービス  
+- 推定工数: [XX]人日
+
+🚨 **高リスク影響**:
+1. **[サービス/システム名]** ([チーム名])
+   - 影響: [詳細]
+   - 責任者: [名前]
+   - 推定工数: [XX人日]
+   - 対応期限: [日付]
+
+📅 **推奨スケジュール**:
+- [X週間前]: [アクション]
+- [X週間前]: [アクション]
+
+🛡️ **リスク軽減策**:
+- [対策1]
+- [対策2]
+\`\`\`
+
+### パターン5: 通知・アラート応答  
+\`\`\`
+「🚨 **[アラート種別]アラート**
+
+📊 **状況サマリー**:
+- 影響範囲: [詳細]
+- 重要度: [Critical/High/Medium]
+- 検出時刻: [日時]
+
+⚡ **即時対応項目**:
+1. [緊急対応1]
+2. [緊急対応2]
+
+👨‍💼 **担当者**: @[チーム名] @[担当者]
+
+🎫 **チケット**: [チケット番号]自動作成済み
+
+📈 **監視継続**: [監視内容・頻度]
+\`\`\`
+
+**重要**: 必ず上記パターンのいずれかに従って構造化された応答を生成してください。絵文字、階層化、定量的データを含む専門的な形式で回答することが必須です。
+`;
+
+  return prompt;
+}
 
 export async function POST(
   request: NextRequest
@@ -24,103 +252,41 @@ export async function POST(
       );
     }
 
-    // 2.0秒の遅延を追加してロード状態を確認できるようにする
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // API キーの確認
+    if (!process.env.GOOGLE_API_KEY) {
+      console.error('GOOGLE_API_KEY is not set');
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Google API key is not configured',
+        },
+        { status: 500 }
+      );
+    }
 
-    // モックレスポンスの生成
-    const mockResponses = [
-      `ご質問いただきありがとうございます。**${message.userRole || 'エンジニア'}**として、**${message.userSkills || '技術スキル'}**を活用した観点からお答えします。
+    // プロンプトの構築
+    const processedPrompt = buildPrompt(
+      message.mainPrompt,
+      message.userRole,
+      message.userSkills
+    );
 
-${message.mainPrompt}について、以下のような観点で考察してみました：
+    // Google Generative AI API の呼び出し
+    const genAIResponse = await ai.models.generateContent({
+      model: 'gemini-2.0-flash-exp',
+      contents: processedPrompt,
+    });
 
-## 主なポイント
+    const aiContent = genAIResponse.text;
 
-- **実装方法**: モダンな技術スタックを活用した効率的なアプローチ
-- **ベストプラクティス**: 業界標準に沿った開発手法の適用
-- **パフォーマンス**: スケーラビリティと保守性を考慮した設計
-
-## 具体的な提案
-
-1. **アーキテクチャ設計**: 要件に応じた最適な技術選択
-2. **実装戦略**: 段階的な開発アプローチ
-3. **品質保証**: テスト駆動開発とコードレビュー
-
-さらに詳しい情報が必要でしたら、具体的な技術的詳細についてもお答えできます。何かご不明な点はございますか？`,
-
-      `**${message.userRole || 'プロフェッショナル'}**の視点から、**${message.userSkills || '専門スキル'}**を踏まえてお答えします。
-
-## ${message.mainPrompt}について
-
-この課題に対する包括的なアプローチをご提案いたします：
-
-### 分析フェーズ
-- 現状の課題と要件の詳細分析
-- ステークホルダーのニーズ把握
-- 技術的制約と機会の評価
-
-### 解決策の設計
-- 最適なソリューションアーキテクチャの構築
-- リスク評価と軽減戦略
-- 実装ロードマップの策定
-
-### 実行計画
-1. 要件定義とプロトタイプ作成
-2. 段階的な実装と検証
-3. パフォーマンステストと最適化
-4. デプロイとモニタリング
-
-### 成功要因
-- チームコラボレーション
-- 継続的な改善
-- ユーザーフィードバックの活用
-
-このアプローチにより、効率的で持続可能なソリューションを実現できると考えています。`,
-
-      `ありがとうございます！**${message.userRole || 'エキスパート'}**としての経験と**${message.userSkills || '専門知識'}**を活かして、詳しく解説いたします。
-
-# ${message.mainPrompt}
-
-## 概要
-
-この分野においては、以下の要素が重要になります：
-
-### 技術的観点
-- **最新技術の活用**: 効率性と革新性のバランス
-- **セキュリティ**: データ保護とプライバシー対策
-- **スケーラビリティ**: 将来の成長を見据えた設計
-
-### ビジネス観点
-- **ROI最大化**: 投資対効果の最適化
-- **ユーザー体験**: 直感的で使いやすいインターフェース
-- **競争優位性**: 市場での差別化要因
-
-## 実装戦略
-
-### フェーズ1: 基盤構築
-- 要件分析と技術選定
-- プロトタイプ開発
-- PoC（概念実証）の実施
-
-### フェーズ2: 開発・テスト
-- アジャイル開発手法の採用
-- 継続的インテグレーション
-- 品質保証プロセス
-
-### フェーズ3: デプロイ・運用
-- 段階的リリース
-- モニタリングとログ分析
-- 継続的改善
-
-詳細について、特定の側面をさらに深掘りしたい点はございますか？`,
-    ];
-
-    // ランダムに応答を選択
-    const randomResponse =
-      mockResponses[Math.floor(Math.random() * mockResponses.length)];
+    // レスポンスの検証
+    if (!aiContent) {
+      throw new Error('No response content received from Gemini API');
+    }
 
     const response: ChatResponseObject = {
       messageId: uuidv4(),
-      content: randomResponse,
+      content: aiContent,
       timestamp: new Date().toISOString(),
     };
 
@@ -130,10 +296,24 @@ ${message.mainPrompt}について、以下のような観点で考察してみ�
     });
   } catch (error) {
     console.error('Error processing chat request:', error);
+
+    // より具体的なエラーメッセージを提供
+    let errorMessage = 'Failed to process chat request';
+
+    if (error instanceof Error) {
+      if (error.message.includes('API key')) {
+        errorMessage = 'Google API key configuration error';
+      } else if (error.message.includes('Gemini API')) {
+        errorMessage = 'Failed to get response from Gemini AI';
+      } else {
+        errorMessage = error.message;
+      }
+    }
+
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to process chat request',
+        error: errorMessage,
       },
       { status: 500 }
     );
