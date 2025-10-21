@@ -24,12 +24,9 @@ export default function ChatDetailPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
-  // サマリーフックを使用
-  const { generateSummary } = useChatSummary(
-    'user-1',
-    undefined,
-    chatId
-  );
+  // サマリーフックを統一管理
+  const { summary, isGenerating, error, generateSummary, fetchSummary } =
+    useChatSummary('user-1', undefined, chatId);
 
   // 現在のチャット詳細の取得
   const fetchCurrentChat = async (id: string) => {
@@ -256,6 +253,8 @@ export default function ChatDetailPage() {
               onMessageSent={handleMessageSent}
               isSubmitting={isSubmitting}
               setIsSubmitting={setIsSubmitting}
+              generateSummary={generateSummary}
+              currentMessages={currentChat?.messages || []}
             />
           </div>
         </div>
@@ -267,6 +266,9 @@ export default function ChatDetailPage() {
           <ChatSummaryDrawer
             userId="user-1" // TODO: 実際のユーザーIDに置き換え
             chatId={chatId}
+            summary={summary}
+            isGenerating={isGenerating}
+            error={error}
           />
         </div>
       )}

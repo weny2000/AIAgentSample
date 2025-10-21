@@ -10,8 +10,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RefreshCw, ExternalLink, Maximize2, Minimize2, X } from 'lucide-react';
-import { useChatSummary } from '@/hooks/useChatSummary';
 import { useNetworkGraph } from '@/hooks/useNetworkGraph';
+import { ChatSummary } from '@/lib/types';
 
 interface ChatSummaryDrawerProps {
   userId: string;
@@ -20,39 +20,23 @@ interface ChatSummaryDrawerProps {
   isOpen?: boolean;
   className?: string;
   focusNodeId?: string; // フォーカスする人名を指定
+  summary?: ChatSummary | null; // 親から渡されるサマリーデータ
+  isGenerating?: boolean; // 親から渡される生成状態
+  error?: string | null; // 親から渡されるエラー状態
 }
 
 export default function ChatSummaryDrawer({
   userId,
-  chatId,
-  timestamp,
   isOpen = true,
   className = '',
   focusNodeId = 'alice_tanaka', // デフォルトでalice_tanakaにフォーカス
+  summary,
+  isGenerating = false,
+  error,
 }: ChatSummaryDrawerProps) {
-  // カスタムフックを使用 - chatIdを優先して使用
-  const {
-    summary,
-    isLoading,
-    isGenerating,
-    error,
-    fetchSummary,
-    generateSummary,
-  } = useChatSummary(userId, timestamp, chatId);
-
   const { error: networkError } = useNetworkGraph(userId);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [isNetworkExpanded, setIsNetworkExpanded] = useState(false);
-
-  // データの更新（カスタムフック使用）
-  const refreshData = async () => {
-    console.log('Refreshing summary data...', { userId, chatId, timestamp });
-    if (chatId) {
-      await fetchSummary(undefined, chatId, true);
-    } else {
-      await fetchSummary();
-    }
-  };
 
   // useEffectは不要（カスタムフックが自動で呼び出し）
 
@@ -64,31 +48,6 @@ export default function ChatSummaryDrawer({
     <div className={`h-screen flex flex-col ${className}`}>
       <div className="flex items-center justify-between p-4 border-b">
         <h2 className="text-lg font-semibold">Chat Analysis</h2>
-        <div className="flex items-center gap-2">
-          {chatId && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => generateSummary(chatId)}
-              disabled={isGenerating}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw
-                className={`h-4 w-4 ${isGenerating ? 'animate-spin' : ''}`}
-              />
-              {isGenerating ? 'Generating...' : 'Generate'}
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={refreshData}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
-        </div>
       </div>
 
       {(error || networkError) && (
@@ -106,7 +65,7 @@ export default function ChatSummaryDrawer({
             </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0">
               <ScrollArea className="h-full w-full p-4">
-                {isLoading || isGenerating ? (
+                {isGenerating ? (
                   <div className="space-y-3">
                     {isGenerating && (
                       <div className="text-sm text-blue-600 font-medium flex items-center gap-2 mb-4">
