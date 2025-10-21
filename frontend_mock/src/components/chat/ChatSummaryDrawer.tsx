@@ -23,6 +23,8 @@ interface ChatSummaryDrawerProps {
   summary?: ChatSummary | null; // 親から渡されるサマリーデータ
   isGenerating?: boolean; // 親から渡される生成状態
   error?: string | null; // 親から渡されるエラー状態
+  isNetworkExpanded?: boolean; // 親から渡されるネットワーク図拡大状態
+  setIsNetworkExpanded?: (expanded: boolean) => void; // 親の状態を更新する関数
 }
 
 export default function ChatSummaryDrawer({
@@ -33,10 +35,19 @@ export default function ChatSummaryDrawer({
   summary,
   isGenerating = false,
   error,
+  isNetworkExpanded: parentIsNetworkExpanded = false,
+  setIsNetworkExpanded: parentSetIsNetworkExpanded,
 }: ChatSummaryDrawerProps) {
   const { error: networkError } = useNetworkGraph(userId);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const [isNetworkExpanded, setIsNetworkExpanded] = useState(false);
+
+  // 親から状態管理を受け取る場合はそれを使用、そうでなければローカル状態を使用
+  const [localIsNetworkExpanded, setLocalIsNetworkExpanded] = useState(false);
+  const isNetworkExpanded = parentSetIsNetworkExpanded
+    ? parentIsNetworkExpanded
+    : localIsNetworkExpanded;
+  const setIsNetworkExpanded =
+    parentSetIsNetworkExpanded || setLocalIsNetworkExpanded;
 
   // useEffectは不要（カスタムフックが自動で呼び出し）
 
@@ -154,51 +165,6 @@ export default function ChatSummaryDrawer({
           </Card>
         </div>
       </div>
-
-      {/* 拡大表示用オーバーレイ */}
-      {isNetworkExpanded && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
-            <div className="flex items-center justify-between p-4 border-b bg-white rounded-t-lg">
-              <h3 className="text-lg font-semibold">
-                ネットワーク図 - 拡大表示
-              </h3>
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    window.open(
-                      `/team_network.html?focus=${focusNodeId}`,
-                      '_blank'
-                    )
-                  }
-                  className="flex items-center gap-2"
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  新しいタブで開く
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsNetworkExpanded(false)}
-                  className="flex items-center gap-2"
-                >
-                  <X className="h-4 w-4" />
-                  閉じる
-                </Button>
-              </div>
-            </div>
-            <div className="flex-1 p-0 bg-white rounded-b-lg overflow-hidden">
-              <iframe
-                src={`/team_network.html?focus=${focusNodeId}`}
-                className="w-full h-full border-0 rounded-b-lg"
-                title="Team Network Diagram - Expanded"
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

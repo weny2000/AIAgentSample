@@ -9,7 +9,13 @@ import ChatSummaryDrawer from '@/components/chat/ChatSummaryDrawer';
 import { useChatSummary } from '@/hooks/useChatSummary';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { MessageSquare, PanelRight, PanelRightClose } from 'lucide-react';
+import {
+  MessageSquare,
+  PanelRight,
+  PanelRightClose,
+  ExternalLink,
+  X,
+} from 'lucide-react';
 
 export default function ChatDetailPage() {
   const params = useParams();
@@ -22,6 +28,7 @@ export default function ChatDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(true);
+  const [isNetworkExpanded, setIsNetworkExpanded] = useState(false); // ネットワーク図拡大状態
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // サマリーフックを統一管理
@@ -269,7 +276,57 @@ export default function ChatDetailPage() {
             summary={summary}
             isGenerating={isGenerating}
             error={error}
+            isNetworkExpanded={isNetworkExpanded}
+            setIsNetworkExpanded={setIsNetworkExpanded}
           />
+        </div>
+      )}
+
+      {/* ネットワーク図拡大表示用オーバーレイ */}
+      {isNetworkExpanded && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+          style={{ zIndex: 10 }}
+        >
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-6xl h-full max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-4 border-b bg-white rounded-t-lg">
+              <h3 className="text-lg font-semibold">
+                ネットワーク図 - 拡大表示
+              </h3>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    window.open(
+                      `/team_network.html?focus=alice_tanaka`,
+                      '_blank'
+                    )
+                  }
+                  className="flex items-center gap-2"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  新しいタブで開く
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsNetworkExpanded(false)}
+                  className="flex items-center gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  閉じる
+                </Button>
+              </div>
+            </div>
+            <div className="flex-1 p-0 bg-white rounded-b-lg overflow-hidden">
+              <iframe
+                src={`/team_network.html?focus=alice_tanaka`}
+                className="w-full h-full border-0 rounded-b-lg"
+                title="Team Network Diagram - Expanded"
+              />
+            </div>
+          </div>
         </div>
       )}
     </div>
