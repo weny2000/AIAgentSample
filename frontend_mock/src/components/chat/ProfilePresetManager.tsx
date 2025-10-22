@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,7 +41,7 @@ export default function ProfilePresetManager({
   const [error, setError] = useState<string | null>(null);
 
   // プロフィール一覧を取得
-  const fetchProfiles = async () => {
+  const fetchProfiles = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await fetch(`/api/profiles?userId=${userId}`);
@@ -57,7 +57,7 @@ export default function ProfilePresetManager({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   // 新規プロフィール作成
   const createProfile = async () => {

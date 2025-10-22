@@ -1,5 +1,3 @@
-import { JWT } from 'next-auth/jwt';
-
 // NextAuth JWT トークンの拡張
 declare module 'next-auth/jwt' {
   interface JWT {

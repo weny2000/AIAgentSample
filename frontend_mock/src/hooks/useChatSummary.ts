@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { ChatSummary } from '@/lib/types';
+import { ChatSummary, MessageObject } from '@/lib/types';
 
 export function useChatSummary(
   userId: string,
@@ -22,8 +22,7 @@ export function useChatSummary(
   const fetchSummary = useCallback(
     async (
       targetTimestamp?: string,
-      targetChatId?: string,
-      _forceRefresh?: boolean
+      targetChatId?: string
     ) => {
       if (!userId && !targetChatId) return;
 
@@ -105,7 +104,7 @@ export function useChatSummary(
 
   // 新しいサマリーを生成（LLM使用）
   const generateSummary = useCallback(
-    async (targetChatId: string, messages?: any[]) => {
+    async (targetChatId: string, messages?: MessageObject[]) => {
       try {
         setIsGenerating(true);
         setError(null);
@@ -162,7 +161,7 @@ export function useChatSummary(
         fetchSummaryHistory();
       }
     }
-  }, [userId, timestamp, chatId]); // 関数を依存配列から除外
+  }, [userId, timestamp, chatId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
     summary,

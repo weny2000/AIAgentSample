@@ -9,12 +9,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RefreshCw, ExternalLink, Maximize2, Minimize2, X } from 'lucide-react';
+import { RefreshCw, ExternalLink, Maximize2, Minimize2 } from 'lucide-react';
 import { useNetworkGraph } from '@/hooks/useNetworkGraph';
 import { ChatSummary } from '@/lib/types';
 
 interface ChatSummaryDrawerProps {
-  userId: string;
   chatId?: string;
   timestamp?: string;
   isOpen?: boolean;
@@ -28,7 +27,6 @@ interface ChatSummaryDrawerProps {
 }
 
 export default function ChatSummaryDrawer({
-  userId,
   isOpen = true,
   className = '',
   focusNodeId = 'alice_tanaka', // デフォルトでalice_tanakaにフォーカス
@@ -38,7 +36,7 @@ export default function ChatSummaryDrawer({
   isNetworkExpanded: parentIsNetworkExpanded = false,
   setIsNetworkExpanded: parentSetIsNetworkExpanded,
 }: ChatSummaryDrawerProps) {
-  const { error: networkError } = useNetworkGraph(userId);
+  const { error: networkError } = useNetworkGraph();
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   // 親から状態管理を受け取る場合はそれを使用、そうでなければローカル状態を使用

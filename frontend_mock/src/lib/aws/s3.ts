@@ -73,6 +73,7 @@ export async function uploadNetworkJson(
  */
 export async function getSignedUrlForObject(
   key: string,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   _expiresIn: number = 3600 // デフォルト1時間
 ): Promise<string> {
   try {
