@@ -34,11 +34,11 @@ USER appuser
 
 # Default runtime configuration
 ENV APP_HOST=0.0.0.0 \
-    APP_PORT=8000 \
+    APP_PORT=80 \
     UVICORN_WORKERS=1 \
     LOG_LEVEL=info
 
-EXPOSE 8000
+EXPOSE 80
 
 # Start FastAPI app via uvicorn (module path: strands_agents.service.app:app)
-CMD ["sh", "-c", "uvicorn strands_agents.service.app:app --host ${APP_HOST:-0.0.0.0} --port ${APP_PORT:-8000} --workers ${UVICORN_WORKERS:-1} --log-level ${LOG_LEVEL:-info}"]
+CMD ["sh", "-c", "uvicorn strands_agents.service.app:app --host ${APP_HOST:-0.0.0.0} --port ${APP_PORT:-80} --workers ${UVICORN_WORKERS:-1} --log-level ${LOG_LEVEL:-info}"]

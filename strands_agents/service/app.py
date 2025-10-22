@@ -212,6 +212,11 @@ async def run_agents(req: RunRequest) -> Dict[str, Any]:
                 {"title": r.get("title", ""), "snippet": r.get("snippet", "")} 
                 for r in tacit_results[:5]
             ]
+            intermediate.search_summary = [
+                {"title": r.get("title", ""), "snippet": r.get("snippet", "")}
+                for r in results[:5]
+            ]
+
             
             # Step 5: Build response
             agent_start = time.time()
@@ -512,3 +517,10 @@ async def health_check() -> Dict[str, Any]:
             "ace": True
         }
     }
+
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.getenv("PORT", "80"))
+    host = os.getenv("HOST", "0.0.0.0")
+    uvicorn.run(app, host=host, port=port)

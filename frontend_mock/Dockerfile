@@ -8,7 +8,7 @@ COPY . .
 ENV COGNITO_CLIENT_ID=dummy
 ENV COGNITO_CLIENT_SECRET=dummy
 ENV COGNITO_ISSUER=dummy
-ENV NEXTAUTH_URL=http://localhost:3000
+ENV NEXTAUTH_URL=http://localhost:80
 ENV NEXTAUTH_SECRET=dummy
 RUN npm run build
 

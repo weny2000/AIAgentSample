@@ -5,6 +5,8 @@ import {
   ChatRequestObject,
   ChatResponseObject,
   ApiResponse,
+  MessageObject,
+  ChatSummary,
 } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +21,8 @@ interface ChatFormProps {
   onMessageSent: (userMessage: string, assistantMessage: string) => void;
   isSubmitting: boolean;
   setIsSubmitting: (isSubmitting: boolean) => void;
+  generateSummary?: (targetChatId: string, messages?: MessageObject[]) => Promise<ChatSummary>; // messagesパラメータを追加
+  currentMessages?: MessageObject[]; // 現在の会話履歴を受け取る
 }
 
 export function ChatForm({
@@ -26,46 +30,14 @@ export function ChatForm({
   onMessageSent,
   isSubmitting,
   setIsSubmitting,
+  generateSummary,
+  currentMessages = [], // 現在の会話履歴を受け取る
 }: ChatFormProps) {
   const [formData, setFormData] = useState<InputPromptObject>({
     mainPrompt: '',
     userRole: '',
     userSkills: '',
   });
-
-  // サマリー生成関数（シンプル版）
-  const generateChatSummary = async () => {
-    try {
-      // 固定のユーザーID（デモ用）
-      const userId = 'user-1';
-
-      const summaryRequest = {
-        userId: userId,
-        chatId: chatId,
-      };
-
-      const summaryResponse = await fetch('/api/chat/summary', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(summaryRequest),
-      });
-
-      if (summaryResponse.ok) {
-        const result = await summaryResponse.json();
-        console.log(
-          'Chat summary generated successfully:',
-          result.data?.summary
-        );
-      } else {
-        console.warn('Failed to generate chat summary');
-      }
-    } catch (error) {
-      // サマリー生成のエラーは無視（メインの機能に影響させない）
-      console.warn('Error generating chat summary:', error);
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +89,14 @@ export function ChatForm({
         onMessageSent('', result.data.content);
 
         // サマリーAPIを呼び出し（バックグラウンドで実行、エラーは無視）
-        generateChatSummary();
+        if (generateSummary && currentMessages.length > 0) {
+          try {
+            await generateSummary(chatId, currentMessages);
+          } catch (error) {
+            // サマリー生成のエラーは無視（メインの機能に影響させない）
+            console.warn('Error generating chat summary:', error);
+          }
+        }
       } else {
         console.error('Failed to send message:', result.error);
         // エラー処理: エラーメッセージを表示

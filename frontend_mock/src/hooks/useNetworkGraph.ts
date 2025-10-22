@@ -10,12 +10,13 @@ import {
   CreateNetworkGraphResponse,
 } from '@/lib/types';
 
-export function useNetworkGraph(_userId: string) {
+export function useNetworkGraph() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ネットワーク図生成・保存（サンプル版）
   const createNetworkGraph = async (
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _networkData: CreateNetworkGraphRequest
   ): Promise<CreateNetworkGraphResponse | null> => {
     try {

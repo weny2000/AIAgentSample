@@ -11,15 +11,16 @@ import {
   UpdateProfileRequest,
 } from '@/lib/types';
 
-export function useProfiles(userId: string) {
+export function useProfiles(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  userId: string
+) {
   const [profiles, setProfiles] = useState<ProfileResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // プロフィール一覧を取得（JSONデータから）
   const fetchProfiles = async () => {
-    if (!userId) return;
-
     try {
       setIsLoading(true);
       setError(null);
@@ -141,17 +142,15 @@ export function useProfiles(userId: string) {
     return profiles.find(profile => profile.isDefault) || null;
   };
 
+  // 初回描画時のみプロフィールを読み込み
   useEffect(() => {
-    if (userId) {
-      fetchProfiles();
-    }
-  }, [userId, fetchProfiles]);
+    fetchProfiles();
+  }, []);
 
   return {
     profiles,
     isLoading,
     error,
-    fetchProfiles,
     createProfile,
     updateProfile,
     setDefaultProfile,

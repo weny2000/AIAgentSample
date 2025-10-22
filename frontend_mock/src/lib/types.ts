@@ -1,5 +1,3 @@
-import { JWT } from 'next-auth/jwt';
-
 // NextAuth JWT トークンの拡張
 declare module 'next-auth/jwt' {
   interface JWT {
@@ -113,12 +111,9 @@ export interface UserProfile {
 // =============================================================
 
 // サマリー関連
-export interface CreateSummaryRequest {
+export interface GenerateSummaryRequest {
   chatId: string;
-  userId?: string;
-  previousSummary?: string;
-  latestQuestion?: string;
-  latestAnswer?: string;
+  messages: MessageObject[]; // 会話履歴データ
 }
 
 export interface CreateSummaryResponse {
