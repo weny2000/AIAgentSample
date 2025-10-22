@@ -6,21 +6,21 @@ An AI Agent system that functions as a "digital twin" for team leaders within an
 
 ```
 ai-agent-system/
-├── frontend/          # React SPA application
 ├── frontend_mock/     # Next.js chat application with strands integration
-├── backend/           # Serverless backend services
-├── infrastructure/    # AWS infrastructure as code
+├── knowledge_base/    # Knowledge base service
 ├── strands_agents/    # StrandsAgents Python service
+├── scripts/           # Deployment and utility scripts
 ├── .kiro/            # Kiro specifications and configuration
-└── package.json      # Root package configuration
+└── .bedrock_agentcore.yaml  # Bedrock AgentCore configuration
 ```
 
 ## Getting Started
 
 ## Typical prompts
-* I want to build a Next.js App on Amazon Bedrock
-* How can I use Amazon Bedrock and generative AI with LLMs to build an Internal Wiki
-* Next.jsでSEO対策をする方法を教えてください。
+
+- I want to build a Next.js App on Amazon Bedrock
+- How can I use Amazon Bedrock and generative AI with LLMs to build an Internal Wiki
+- Next.js で SEO 対策をする方法を教えてください。
 
 ### Prerequisites
 
@@ -89,11 +89,13 @@ The system includes a Python FastAPI microservice built using strands-agents (sd
 ### Running StrandsAgents Service
 
 1. Start the Python service:
+
 ```bash
 ./scripts/start-strands-service.sh
 ```
 
 2. Configure the frontend_mock:
+
 ```bash
 cd frontend_mock
 cp .env.local.example .env.local
@@ -101,6 +103,7 @@ cp .env.local.example .env.local
 ```
 
 3. Start the Next.js chat application:
+
 ```bash
 cd frontend_mock
 npm install
@@ -144,6 +147,7 @@ Deploy infrastructure using the deployment scripts:
 ```
 
 The deployment process includes:
+
 1. **Dependency installation** and testing
 2. **Tag validation** to ensure compliance
 3. **Security checks** and CloudFormation synthesis
@@ -154,6 +158,7 @@ The deployment process includes:
 ### Tag Validation
 
 Before deployment, all resources are validated for:
+
 - Mandatory tags (Project, Stage, Component, Owner, etc.)
 - Resource-specific tags (FunctionPurpose, DataClassification, etc.)
 - Environment-appropriate values
@@ -184,6 +189,7 @@ For infrastructure changes, follow the comprehensive checklist at [infrastructur
 ### Resource Tagging Requirements
 
 All AWS resources must have:
+
 - **Mandatory tags**: Project, Stage, Component, Owner, CostCenter, etc.
 - **Resource-specific tags**: Based on resource type (Lambda, DynamoDB, S3, etc.)
 - **Data classification tags**: For all data storage resources
