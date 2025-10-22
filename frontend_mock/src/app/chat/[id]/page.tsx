@@ -32,7 +32,7 @@ export default function ChatDetailPage() {
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   // サマリーフックを統一管理
-  const { summary, isGenerating, error, generateSummary, fetchSummary } =
+  const { summary, isGenerating, error, generateSummary } =
     useChatSummary('user-1', undefined, chatId);
 
   // 現在のチャット詳細の取得
@@ -271,7 +271,6 @@ export default function ChatDetailPage() {
       {isDrawerOpen && (
         <div className="fixed right-0 top-0 w-80 h-screen bg-background border-l shadow-lg">
           <ChatSummaryDrawer
-            userId="user-1" // TODO: 実際のユーザーIDに置き換え
             chatId={chatId}
             summary={summary}
             isGenerating={isGenerating}

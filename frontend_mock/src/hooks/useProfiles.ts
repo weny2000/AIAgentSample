@@ -11,7 +11,10 @@ import {
   UpdateProfileRequest,
 } from '@/lib/types';
 
-export function useProfiles(userId: string) {
+export function useProfiles(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  userId: string
+) {
   const [profiles, setProfiles] = useState<ProfileResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

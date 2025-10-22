@@ -7,13 +7,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 import { GenerateSummaryRequest, ChatSummary, ApiResponse } from '@/lib/types';
 
+import { MessageObject } from '@/lib/types';
+
 // GoogleGenAI クライアントの初期化
 const ai = new GoogleGenAI({
   apiKey: process.env.GOOGLE_API_KEY,
 });
 
 // サマリー生成用プロンプトを構築する関数
-function buildSummaryPrompt(messages: any[]): string {
+function buildSummaryPrompt(messages: MessageObject[]): string {
   // メッセージを文字列形式に変換
   const conversationText = messages
     .map(msg => `${msg.role === 'user' ? 'ユーザー' : 'AI'}: ${msg.content}`)

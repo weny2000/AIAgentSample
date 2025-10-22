@@ -5,6 +5,8 @@ import {
   ChatRequestObject,
   ChatResponseObject,
   ApiResponse,
+  MessageObject,
+  ChatSummary,
 } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,8 +21,8 @@ interface ChatFormProps {
   onMessageSent: (userMessage: string, assistantMessage: string) => void;
   isSubmitting: boolean;
   setIsSubmitting: (isSubmitting: boolean) => void;
-  generateSummary?: (targetChatId: string, messages?: any[]) => Promise<any>; // messagesパラメータを追加
-  currentMessages?: any[]; // 現在の会話履歴を受け取る
+  generateSummary?: (targetChatId: string, messages?: MessageObject[]) => Promise<ChatSummary>; // messagesパラメータを追加
+  currentMessages?: MessageObject[]; // 現在の会話履歴を受け取る
 }
 
 export function ChatForm({
