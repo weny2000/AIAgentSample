@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v4 as uuidv4 } from 'uuid';
 import { ApiResponse, ChatRequestObject, ChatResponseObject } from '@/lib/types';
+import { getDefaultProfile } from '@/lib/aws/dynamodb';
+
+interface ExtendedProfile {
+  role: string;
+  skills: string;
+  profileId?: string;
+  isDefault?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export async function POST(
   request: NextRequest
@@ -22,13 +32,34 @@ export async function POST(
     const serviceUrl =
       process.env.STRANDS_SERVICE_URL || 'http://localhost:8001';
 
+    // Get user profile information from DynamoDB
+    // TODO: Replace with actual user ID from authentication
+    const userId = 'user-1';
+    let profileInfo: ExtendedProfile = { role: message.userRole, skills: message.userSkills };
+    
+    try {
+      const defaultProfile = await getDefaultProfile(userId);
+      if (defaultProfile) {
+        profileInfo = {
+          role: message.userRole || defaultProfile.role,
+          skills: message.userSkills || defaultProfile.skills,
+          profileId: defaultProfile.profileId,
+          isDefault: defaultProfile.isDefault,
+          createdAt: defaultProfile.createdAt,
+          updatedAt: defaultProfile.updatedAt,
+        };
+      }
+    } catch (error) {
+      console.warn('Failed to fetch user profile, using form data only:', error);
+    }
+
     const res = await fetch(`${serviceUrl}/agents/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chatId,
         prompt: message.mainPrompt,
-        profile: { role: message.userRole, skills: message.userSkills },
+        profile: profileInfo,
       }),
     });
 
