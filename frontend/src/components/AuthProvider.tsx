@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { SessionProvider } from 'next-auth/react';
-import { createContext, useContext } from 'react';
+import { SessionProvider } from "next-auth/react";
+import { createContext, useContext } from "react";
 
 // 認証スキップモードのコンテキスト
 const AuthSkipContext = createContext<{
@@ -21,11 +21,11 @@ export default function AuthProvider({
 }) {
   // 開発時に認証をスキップするかどうか（ここをtrueにすると認証をスキップ）
   const isSkipMode = true; // 一時的に認証をスキップ
-  
+
   const mockUser = {
     user: {
-      email: 'dev@example.com',
-      name: '開発ユーザー',
+      email: "dev@example.com",
+      name: "チームメンバー",
     },
   };
 
