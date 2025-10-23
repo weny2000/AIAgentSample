@@ -4,6 +4,7 @@ import { useSession, signIn } from 'next-auth/react';
 import { Button } from '@/components/ui/button';
 import { MessageSquare, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
+import { useAuthSkip } from './AuthProvider';
 
 interface AuthChatButtonProps {
   size?: 'default' | 'sm' | 'lg' | 'icon';
@@ -15,6 +16,7 @@ export default function AuthChatButton({
   className,
 }: AuthChatButtonProps) {
   const { data: session, status } = useSession();
+  const { isSkipMode } = useAuthSkip();
 
   const handleChatStart = () => {
     if (!session) {
@@ -23,18 +25,8 @@ export default function AuthChatButton({
     }
   };
 
-  if (status === 'loading') {
-    return (
-      <Button size={size} className={className} disabled>
-        <MessageSquare className="h-5 w-5" />
-        読み込み中...
-        <ArrowRight className="h-5 w-5" />
-      </Button>
-    );
-  }
-
-  if (session) {
-    // 認証済みの場合、チャットページへ遷移
+  // 認証スキップモードまたは認証済みの場合、チャットページへ遷移
+  if (isSkipMode || session) {
     return (
       <Link href="/chat">
         <Button size={size} className={className}>
@@ -43,6 +35,16 @@ export default function AuthChatButton({
           <ArrowRight className="h-5 w-5" />
         </Button>
       </Link>
+    );
+  }
+
+  if (status === 'loading') {
+    return (
+      <Button size={size} className={className} disabled>
+        <MessageSquare className="h-5 w-5" />
+        読み込み中...
+        <ArrowRight className="h-5 w-5" />
+      </Button>
     );
   }
 

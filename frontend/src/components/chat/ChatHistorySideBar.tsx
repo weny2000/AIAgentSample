@@ -35,6 +35,7 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { v4 as uuidv4 } from 'uuid';
 import { useState } from 'react';
+import { useAuthSkip } from '../AuthProvider';
 
 interface ChatHistorySideBarProps {
   histories: ChatHistorySummaryObject[];
@@ -51,7 +52,11 @@ export function ChatHistorySideBar({
 }: ChatHistorySideBarProps) {
   const router = useRouter();
   const { data: session } = useSession();
+  const { isSkipMode, mockUser } = useAuthSkip();
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // 認証スキップモードまたは通常モードでのユーザー情報
+  const user = isSkipMode ? mockUser?.user : session?.user;
 
   const handleNewChat = () => {
     const newChatId = uuidv4();
@@ -71,6 +76,12 @@ export function ChatHistorySideBar({
 
   const handleSignOut = async () => {
     if (isSigningOut) return; // 重複実行を防止
+
+    if (isSkipMode) {
+      console.log('開発モードではサインアウトできません');
+      alert('開発モードではサインアウトできません');
+      return;
+    }
 
     const confirmed = window.confirm(
       'サインアウトしますか？\n現在の作業が保存されていることを確認してください。'
@@ -121,13 +132,13 @@ export function ChatHistorySideBar({
   // ユーザー表示情報を取得
   const getUserDisplayName = () => {
     return (
-      session?.user?.name || session?.user?.email?.split('@')[0] || 'ユーザー'
+      user?.name || user?.email?.split('@')[0] || 'ユーザー'
     );
   };
 
   const getUserDisplayEmail = () => {
-    return session?.user?.email
-      ? maskEmail(session.user.email)
+    return user?.email
+      ? maskEmail(user.email)
       : 'メール未設定';
   };
 
