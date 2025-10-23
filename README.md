@@ -6,12 +6,10 @@ An AI Agent system that functions as a "digital twin" for team leaders within an
 
 ```
 ai-agent-system/
-├── frontend_mock/     # Next.js chat application with strands integration
+├── frontend/     # Next.js chat application with strands integration
 ├── knowledge_base/    # Knowledge base service
-├── strands_agents/    # StrandsAgents Python service
-├── scripts/           # Deployment and utility scripts
-├── .kiro/            # Kiro specifications and configuration
-└── .bedrock_agentcore.yaml  # Bedrock AgentCore configuration
+├── strands_agents/    # StrandsAgents Python scripts
+
 ```
 
 ## Getting Started
@@ -94,10 +92,10 @@ The system includes a Python FastAPI microservice built using strands-agents (sd
 ./scripts/start-strands-service.sh
 ```
 
-2. Configure the frontend_mock:
+2. Configure the frontend:
 
 ```bash
-cd frontend_mock
+cd frontend
 cp .env.local.example .env.local
 # Edit .env.local and set STRANDS_SERVICE_URL=http://localhost:8001
 ```
@@ -105,7 +103,7 @@ cp .env.local.example .env.local
 3. Start the Next.js chat application:
 
 ```bash
-cd frontend_mock
+cd frontend
 npm install
 npm run dev
 ```
