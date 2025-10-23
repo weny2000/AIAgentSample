@@ -11,7 +11,7 @@ export default function AuthStatus() {
   const { isSkipMode, mockUser } = useAuthSkip();
 
   // 認証スキップモードの場合
-  if (isSkipMode) {
+  if (isSkipMode && mockUser) {
     return (
       <div className="flex items-center gap-3">
         <Badge variant="outline" className="text-orange-600 border-orange-600">

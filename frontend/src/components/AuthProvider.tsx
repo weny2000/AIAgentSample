@@ -4,9 +4,16 @@ import { SessionProvider } from "next-auth/react";
 import { createContext, useContext } from "react";
 
 // 認証スキップモードのコンテキスト
+interface MockUser {
+  user: {
+    email: string;
+    name: string;
+  };
+}
+
 const AuthSkipContext = createContext<{
   isSkipMode: boolean;
-  mockUser: any;
+  mockUser: MockUser | null;
 }>({
   isSkipMode: false,
   mockUser: null,
