@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { useAuthSkip } from '@/components/AuthProvider';
 
 export default function ChatLayout({
   children,
@@ -17,6 +18,7 @@ export default function ChatLayout({
   const pathname = usePathname();
   const router = useRouter();
   const { status } = useSession();
+  const { isSkipMode } = useAuthSkip();
   const [chatHistories, setChatHistories] = useState<
     ChatHistorySummaryObject[]
   >([]);
@@ -28,6 +30,9 @@ export default function ChatLayout({
 
   // 認証チェック - レイアウトレベルで全チャット関連ページを保護
   useEffect(() => {
+    // 認証スキップモードの場合は認証チェックをスキップ
+    if (isSkipMode) return;
+    
     if (status === 'loading') return; // セッションロード中は待機
 
     if (status === 'unauthenticated') {
@@ -35,9 +40,9 @@ export default function ChatLayout({
       router.push('/');
       return;
     }
-  }, [status, router]);
+  }, [status, router, isSkipMode]);
 
-  // チャット履歴一覧の取得（認証済みの場合のみ実行）
+  // チャット履歴一覧の取得（認証済みまたはスキップモードの場合のみ実行）
   useEffect(() => {
     const fetchChatHistories = async () => {
       try {
@@ -57,19 +62,19 @@ export default function ChatLayout({
       }
     };
 
-    // 認証済みの場合のみチャット履歴を取得
-    if (status === 'authenticated') {
+    // 認証スキップモードまたは認証済みの場合のみチャット履歴を取得
+    if (isSkipMode || status === 'authenticated') {
       fetchChatHistories();
     }
-  }, [status]);
+  }, [status, isSkipMode]);
 
   // サイドバートグル
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  // 認証チェック中または未認証の場合は何も表示しない
-  if (status === 'loading' || status === 'unauthenticated') {
+  // 認証チェック中または未認証の場合は何も表示しない（スキップモードは除く）
+  if (!isSkipMode && (status === 'loading' || status === 'unauthenticated')) {
     return null;
   }
 
