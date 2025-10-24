@@ -14,9 +14,6 @@ export default function AuthStatus() {
   if (isSkipMode && mockUser) {
     return (
       <div className="flex items-center gap-3">
-        <Badge variant="outline" className="text-orange-600 border-orange-600">
-          開発モード
-        </Badge>
         <div className="hidden sm:flex items-center gap-2 text-sm">
           <User className="h-4 w-4" />
           <span>{mockUser.user.email}</span>
